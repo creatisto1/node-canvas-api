@@ -48,12 +48,12 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
 
   // === URL dynamisch vorbereiten ===
   const urlText = website || "www.creatisto.com";
-  let urlFontSize = 22;
-  let urlLineHeight = 0;
+  let urlFontSize = Math.floor(chosenFontSize * 1.5); // 50% größer
+  let urlLineHeight = urlFontSize * 1.3;
   const maxUrlWidth = maxTextWidth;
-  const maxUrlFontSize = Math.min(22, chosenFontSize - 1);
 
-  for (let size = maxUrlFontSize; size >= 12; size -= 1) {
+  // Notfalls kleiner machen, wenn zu breit
+  for (let size = urlFontSize; size >= 12; size--) {
     ctx.font = `bold ${size}px "Averta"`;
     const metrics = ctx.measureText(urlText);
     if (metrics.width <= maxUrlWidth) {
@@ -62,12 +62,10 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
       break;
     }
   }
-  if (urlLineHeight === 0) urlLineHeight = urlFontSize * 1.3;
 
   // === Box-Berechnung ===
   ctx.font = `900 ${chosenFontSize}px "Averta"`; // zurück für Messung
   const totalTextHeight = lines.length * lineHeight;
-  // URL Abstand nach oben wird 40% weniger, deshalb padding wird 60% von vorher für URL-Abstand genutzt
   const urlPaddingTop = padding * 0.6;
 
   const rectWidth = maxTextWidth + padding * 2;
@@ -76,39 +74,42 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   const rectY = targetHeight * verticalPositionFactor - rectHeight / 2;
   const rectX = (targetWidth - rectWidth) / 2;
 
-  // === Hintergrundbox ohne runde Ecken, komplett deckend ===
+  // === Hintergrundbox ===
   ctx.save();
-  ctx.fillStyle = 'rgba(173, 216, 230, 1)'; // komplett deckend
+  ctx.fillStyle = 'rgba(173, 216, 230, 1)';
   ctx.fillRect(rectX, rectY, rectWidth, rectHeight);
   ctx.restore();
 
-  // === Dünne, leicht wellige weiße Linie als Kontur der Farbfläche, eingerückt ===
-  const lineInset = 9; // Einrückung innen
-  const waveAmplitude = 3;
-  const waveLength = 20;
+  // === Weiße Wellenlinie 100% größer und weiter innen ===
+  const lineInset = 18; // war vorher 9 → weiter vom Rand
+  const waveAmplitude = 6; // war 3 → doppelt so hoch
+  const waveLength = 40; // war 20 → doppelt so lang
 
   ctx.save();
   ctx.strokeStyle = 'white';
   ctx.lineWidth = 1.5;
   ctx.beginPath();
 
-  // Obere Linie (von links nach rechts)
+  // Oben
   for (let x = rectX + lineInset; x <= rectX + rectWidth - lineInset; x++) {
     const y = rectY + lineInset + waveAmplitude * Math.sin(((x - (rectX + lineInset)) / waveLength) * 2 * Math.PI);
     if (x === rectX + lineInset) ctx.moveTo(x, y);
     else ctx.lineTo(x, y);
   }
-  // Rechte Linie (von oben nach unten)
+
+  // Rechts
   for (let y = rectY + lineInset; y <= rectY + rectHeight - lineInset; y++) {
     const x = rectX + rectWidth - lineInset + waveAmplitude * Math.sin(((y - (rectY + lineInset)) / waveLength) * 2 * Math.PI);
     ctx.lineTo(x, y);
   }
-  // Untere Linie (von rechts nach links)
+
+  // Unten
   for (let x = rectX + rectWidth - lineInset; x >= rectX + lineInset; x--) {
     const y = rectY + rectHeight - lineInset + waveAmplitude * Math.sin(((x - (rectX + lineInset)) / waveLength) * 2 * Math.PI);
     ctx.lineTo(x, y);
   }
-  // Linke Linie (von unten nach oben)
+
+  // Links
   for (let y = rectY + rectHeight - lineInset; y >= rectY + lineInset; y--) {
     const x = rectX + lineInset + waveAmplitude * Math.sin(((y - (rectY + lineInset)) / waveLength) * 2 * Math.PI);
     ctx.lineTo(x, y);
@@ -118,7 +119,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.stroke();
   ctx.restore();
 
-  // === Text zeichnen (weiß, ohne Schatten) ===
+  // === Overlay Text ===
   ctx.save();
   ctx.fillStyle = 'white';
   ctx.textAlign = 'center';
@@ -129,7 +130,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   });
   ctx.restore();
 
-  // === URL innerhalb der Box (weiß, ohne Schatten) ===
+  // === URL Text ===
   ctx.save();
   ctx.fillStyle = 'white';
   ctx.font = `bold ${urlFontSize}px "Averta"`;
@@ -138,7 +139,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.fillText(
     urlText,
     targetWidth / 2,
-    rectY + padding + totalTextHeight + urlPaddingTop // neuer Abstand zum Haupttext
+    rectY + padding + totalTextHeight + urlPaddingTop
   );
   ctx.restore();
 
