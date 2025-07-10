@@ -23,7 +23,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   let lineHeight = 0;
 
   for (let size = 128; size >= 16; size -= 2) {
-    ctx.font = `900 ${size}px "Open Sans"`;
+    ctx.font = `900 ${size}px "Averta"`;
     lineHeight = size * 1.3;
     const testLines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
     const totalTextHeight = testLines.length * lineHeight;
@@ -41,7 +41,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   }
 
   if (lines.length === 0) {
-    ctx.font = `900 16px "Open Sans"`;
+    ctx.font = `900 16px "Averta"`;
     lineHeight = 16 * 1.3;
     lines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
   }
@@ -54,7 +54,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   const maxUrlFontSize = Math.min(22, chosenFontSize - 1);
 
   for (let size = maxUrlFontSize; size >= 12; size -= 1) {
-    ctx.font = `bold ${size}px "Open Sans"`;
+    ctx.font = `bold ${size}px "Averta"`;
     const metrics = ctx.measureText(urlText);
     if (metrics.width <= maxUrlWidth) {
       urlFontSize = size;
@@ -65,7 +65,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   if (urlLineHeight === 0) urlLineHeight = urlFontSize * 1.3;
 
   // === Box-Berechnung ===
-  ctx.font = `900 ${chosenFontSize}px "Open Sans"`; // zurück für Messung
+  ctx.font = `900 ${chosenFontSize}px "Averta"`; // zurück für Messung
   const totalTextHeight = lines.length * lineHeight;
   // URL Abstand nach oben wird 40% weniger, deshalb padding wird 60% von vorher für URL-Abstand genutzt
   const urlPaddingTop = padding * 0.6;
@@ -132,7 +132,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   // === URL innerhalb der Box (weiß, ohne Schatten) ===
   ctx.save();
   ctx.fillStyle = 'white';
-  ctx.font = `bold ${urlFontSize}px "Open Sans"`;
+  ctx.font = `bold ${urlFontSize}px "Averta"`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
   ctx.fillText(
