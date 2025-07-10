@@ -54,12 +54,11 @@ module.exports = async function generateTemplate(
 
   // === URL dynamisch vorbereiten ===
   const urlText = website || "www.creatisto.com";
-  let urlFontSize = 22;
+  let urlFontSize = Math.floor(22 * 1.5); // 50% größer
   let urlLineHeight = 0;
   const maxUrlWidth = maxTextWidth;
-  const maxUrlFontSize = Math.min(22, chosenFontSize - 1);
 
-  for (let size = maxUrlFontSize; size >= 12; size -= 1) {
+  for (let size = urlFontSize; size >= 12; size -= 1) {
     ctx.font = `bold ${size}px "Averta"`;
     const metrics = ctx.measureText(urlText);
     if (metrics.width <= maxUrlWidth) {
@@ -91,9 +90,9 @@ module.exports = async function generateTemplate(
   ctx.fill();
   ctx.restore();
 
-  // === Text zeichnen (ohne Schatten) ===
+  // === Text zeichnen (weiß, ohne Schatten) ===
   ctx.save();
-  ctx.fillStyle = '#333';
+  ctx.fillStyle = 'white'; // Farbe geändert
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
   lines.forEach((line, index) => {
@@ -102,9 +101,9 @@ module.exports = async function generateTemplate(
   });
   ctx.restore();
 
-  // === URL innerhalb der Box (ohne Schatten, gleiche Farbe wie Haupttext) ===
+  // === URL innerhalb der Box (weiß, ohne Schatten) ===
   ctx.save();
-  ctx.fillStyle = '#333';
+  ctx.fillStyle = 'white'; // Farbe geändert
   ctx.font = `bold ${urlFontSize}px "Averta"`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
