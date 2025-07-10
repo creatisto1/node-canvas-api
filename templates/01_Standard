@@ -54,7 +54,7 @@ module.exports = async function generateTemplate(
 
   // === URL dynamisch vorbereiten ===
   const urlText = website || "www.creatisto.com";
-  let urlFontSize = 16;
+  let urlFontSize = 22;
   let urlLineHeight = 0;
   const maxUrlWidth = maxTextWidth;
   const maxUrlFontSize = Math.min(22, chosenFontSize - 1);
