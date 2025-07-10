@@ -13,7 +13,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   drawVignette(ctx, targetWidth, targetHeight);
 
   // === Text vorbereiten ===
-  const padding = 20;
+  const padding = 40; // erhöht für mehr Abstand zur Wellenlinie
   const maxTextWidth = targetWidth * 0.8;
   const maxTextBlockHeight = targetHeight * 0.25;
   const maxLines = 2;
@@ -46,14 +46,13 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
     lines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
   }
 
-  // === URL dynamisch vorbereiten ===
+  // === URL vorbereiten (nun 50% KLEINER als Textgröße) ===
   const urlText = website || "www.creatisto.com";
-  let urlFontSize = Math.floor(chosenFontSize * 1.5); // 50% größer
+  let urlFontSize = Math.floor(chosenFontSize * 0.5); // 50% der Haupttextgröße
   let urlLineHeight = urlFontSize * 1.3;
   const maxUrlWidth = maxTextWidth;
 
-  // Notfalls kleiner machen, wenn zu breit
-  for (let size = urlFontSize; size >= 12; size--) {
+  for (let size = urlFontSize; size >= 10; size--) {
     ctx.font = `bold ${size}px "Averta"`;
     const metrics = ctx.measureText(urlText);
     if (metrics.width <= maxUrlWidth) {
@@ -80,10 +79,10 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.fillRect(rectX, rectY, rectWidth, rectHeight);
   ctx.restore();
 
-  // === Weiße Wellenlinie 100% größer und weiter innen ===
-  const lineInset = 18; // war vorher 9 → weiter vom Rand
-  const waveAmplitude = 6; // war 3 → doppelt so hoch
-  const waveLength = 40; // war 20 → doppelt so lang
+  // === Weiße Wellenlinie ===
+  const lineInset = 18;
+  const waveAmplitude = 6;
+  const waveLength = 40;
 
   ctx.save();
   ctx.strokeStyle = 'white';
