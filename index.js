@@ -301,12 +301,6 @@ app.post('/center-crop-zoom', async (req, res) => {
   }
 });
 
-  } catch (error) {
-    console.error('Fehler:', error);
-    res.status(500).send('Fehler beim Verarbeiten des Bildes');
-  }
-});
-
 app.listen(port, () => {
   console.log(`✅ Server läuft auf http://localhost:${port}`);
 });
