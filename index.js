@@ -24,8 +24,8 @@ if (!fs.existsSync(publicDir)) {
 app.use('/public', express.static(publicDir));
 
 // Schriftart registrieren
-registerFont(path.join(__dirname, 'fonts', 'OpenSans-Bold.ttf'), {
-  family: 'Open Sans',
+registerFont(path.join(__dirname, 'fonts', 'Averta-Bold.otf'), {
+  family: 'Averta',
   weight: 'bold',
 });
 
