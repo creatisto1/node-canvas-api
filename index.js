@@ -11,7 +11,7 @@ const topleftCrop = require('./templatesCrop/04_topleftCrop');
 const toprightCrop = require('./templatesCrop/05_toprightCrop');
 const verspielt = require('./templates/02_Verspielt');
 const centerCropZoom = require('./templatesCrop/01_1_centerCropZoom');
-const CTA = require('./templatesCrop/03_CTA');
+const cta = require('./templatesCrop/03_CTA');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -303,7 +303,7 @@ app.post('/center-crop-zoom', async (req, res) => {
 });
 
 // Neue Route: CTA Template
-app.post('/CTA', async (req, res) => {
+app.post('/cta', async (req, res) => {
   const imageUrl = req.body.url;
   const website = req.body.website || null;
   let overlayText = req.body.overlay || 'Hello, World!';
@@ -320,9 +320,9 @@ app.post('/CTA', async (req, res) => {
     const targetWidth = img.width;
     const targetHeight = img.height;
 
-    const canvas = await CTA(img, overlayText, targetWidth, targetHeight, website);
+    const canvas = await cta(img, overlayText, targetWidth, targetHeight, website);
 
-    const filename = `img-CTA-${Date.now()}.png`;
+    const filename = `img-cta-${Date.now()}.png`;
     const savePath = path.join(publicDir, filename);
     const out = fs.createWriteStream(savePath);
     const stream = canvas.createPNGStream();
