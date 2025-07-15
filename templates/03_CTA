@@ -4,7 +4,7 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, target
   const canvas = createCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext('2d');
 
-  // === Konstante Höhe für unteren gelben Bereich ===
+  // === Fester unterer Bereich: 495px ===
   const bottomAreaHeight = 495;
   const imageAreaHeight = targetHeight - bottomAreaHeight;
 
@@ -12,7 +12,7 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, target
   ctx.fillStyle = '#FFF9D9'; // Helles Gelb
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
-  // === Bild proportional skalieren & zentrieren im Bildbereich ===
+  // === Bild zeichnen, zentriert im oberen Bereich ===
   const imgAspect = img.width / img.height;
   const areaAspect = targetWidth / imageAreaHeight;
 
@@ -29,15 +29,18 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, target
   const drawY = (imageAreaHeight - drawHeight) / 2;
   ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
 
-  // === Overlay Text ===
+  // === Overlay Text im gelben Bereich ===
   const headlineFontSize = Math.floor(targetHeight * 0.045);
   ctx.fillStyle = '#4F4F4F';
   ctx.font = `bold ${headlineFontSize}px "Averta"`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
-  ctx.fillText(overlayText, targetWidth / 2, imageAreaHeight + 50); // 50px unter dem Bildbereich
 
-  // === Button "JETZT BESUCHEN" ===
+  // Position: 50px unter Beginn des gelben Bereichs
+  const overlayY = imageAreaHeight + 50;
+  ctx.fillText(overlayText, targetWidth / 2, overlayY);
+
+  // === Button ===
   const buttonText = 'JETZT BESUCHEN';
   const buttonFontSize = Math.floor(targetHeight * 0.035);
   const buttonPaddingX = 40;
@@ -48,11 +51,9 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, target
   const buttonWidth = textWidth + buttonPaddingX * 2;
   const buttonHeight = buttonFontSize + buttonPaddingY * 2;
   const buttonX = targetWidth / 2 - buttonWidth / 2;
+  const buttonY = overlayY + headlineFontSize + 30;
 
-  // Position Button ca. 110px unter dem Overlay-Text
-  const buttonY = imageAreaHeight + 50 + headlineFontSize + 30;
-
-  ctx.fillStyle = '#4AC2C2'; // Türkis
+  ctx.fillStyle = '#4AC2C2';
   ctx.fillRect(buttonX, buttonY, buttonWidth, buttonHeight);
 
   ctx.fillStyle = '#FFFFFF';
@@ -60,7 +61,7 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, target
   ctx.textBaseline = 'middle';
   ctx.fillText(buttonText, targetWidth / 2, buttonY + buttonHeight / 2);
 
-  // === Website-URL unter dem Button ===
+  // === Website-URL darunter ===
   const urlText = website || "www.creatisto.com";
   const urlFontSize = Math.floor(headlineFontSize * 0.5);
   ctx.font = `bold ${urlFontSize}px "Averta"`;
