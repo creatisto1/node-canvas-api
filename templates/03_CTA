@@ -32,7 +32,7 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, target
   ctx.font = `bold ${headlineFontSize}px "Averta"`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
-  ctx.fillText(overlayText, targetWidth / 2, topImageHeight + 40); // +10px tiefer
+  ctx.fillText(overlayText, targetWidth / 2, topImageHeight + 50); // vorher 40 → jetzt 50px tiefer
 
   // === Button "JETZT BESUCHEN" ===
   const buttonText = 'JETZT BESUCHEN';
