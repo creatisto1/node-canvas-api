@@ -8,9 +8,28 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, target
   ctx.fillStyle = '#FDF8F6';
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
-  // === Oben zentrales Bild ===
+  // === Oben zentrales Bild (proportional zentriert und beschnitten) ===
   const topImageHeight = targetHeight * 0.6;
-  ctx.drawImage(img, 0, 0, targetWidth, topImageHeight);
+
+  // Originalbildmaße
+  const imgWidth = img.width;
+  const imgHeight = img.height;
+
+  // Berechne Skalierung, um das Bild so zu skalieren, dass es das Canvas-Bereich (topImageHeight x targetWidth) vollständig ausfüllt
+  const scale = Math.max(targetWidth / imgWidth, topImageHeight / imgHeight);
+
+  // Berechnete Größe des Bildes nach Skalierung
+  const scaledWidth = imgWidth * scale;
+  const scaledHeight = imgHeight * scale;
+
+  // Berechne die Startpunkte für zentrierten Zuschnitt
+  const sx = (scaledWidth - targetWidth) / 2 / scale;  // Ursprung x im Originalbild
+  const sy = (scaledHeight - topImageHeight) / 2 / scale;  // Ursprung y im Originalbild
+  const sWidth = targetWidth / scale;
+  const sHeight = topImageHeight / scale;
+
+  // Zeichne das zugeschnittene und skalierte Bild
+  ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, targetWidth, topImageHeight);
 
   // === Overlay Text (Überschrift) ===
   const headlineFontSize = Math.floor(targetHeight * 0.045);
@@ -18,7 +37,7 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, target
   ctx.font = `bold ${headlineFontSize}px "Averta"`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
-  ctx.fillText(overlayText, targetWidth / 2, topImageHeight + 50); // Verschoben um +20px
+  ctx.fillText(overlayText, targetWidth / 2, topImageHeight + 50);
 
   // === Button "JETZT BESUCHEN" ===
   const buttonText = 'JETZT BESUCHEN';
