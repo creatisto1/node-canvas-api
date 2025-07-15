@@ -11,33 +11,64 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, target
   // === Oben zentrales Bild (proportional zentriert und beschnitten) ===
   const topImageHeight = targetHeight * 0.6;
 
-  // Originalbildmaße
   const imgWidth = img.width;
   const imgHeight = img.height;
 
-  // Berechne Skalierung, um das Bild so zu skalieren, dass es das Canvas-Bereich (topImageHeight x targetWidth) vollständig ausfüllt
   const scale = Math.max(targetWidth / imgWidth, topImageHeight / imgHeight);
-
-  // Berechnete Größe des Bildes nach Skalierung
   const scaledWidth = imgWidth * scale;
   const scaledHeight = imgHeight * scale;
-
-  // Berechne die Startpunkte für zentrierten Zuschnitt
-  const sx = (scaledWidth - targetWidth) / 2 / scale;  // Ursprung x im Originalbild
-  const sy = (scaledHeight - topImageHeight) / 2 / scale;  // Ursprung y im Originalbild
+  const sx = (scaledWidth - targetWidth) / 2 / scale;
+  const sy = (scaledHeight - topImageHeight) / 2 / scale;
   const sWidth = targetWidth / scale;
   const sHeight = topImageHeight / scale;
 
-  // Zeichne das zugeschnittene und skalierte Bild
   ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, targetWidth, topImageHeight);
 
-  // === Overlay Text (Überschrift) ===
-  const headlineFontSize = Math.floor(targetHeight * 0.045);
+  // === Overlay Text (umgebrochen) ===
+  const padding = 40;
+  const maxTextWidth = targetWidth * 0.8;
+  const maxTextBlockHeight = targetHeight * 0.2;
+  const maxLines = 3;
+
+  let chosenFontSize = 16;
+  let lines = [];
+  let lineHeight = 0;
+
+  for (let size = 96; size >= 16; size -= 2) {
+    ctx.font = `bold ${size}px "Averta"`;
+    lineHeight = size * 1.3;
+    const testLines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
+    const totalTextHeight = testLines.length * lineHeight;
+    const joined = testLines.join('').replace(/-/g, '').replace(/\s/g, '');
+    const original = overlayText.replace(/-/g, '').replace(/\s/g, '');
+    if (
+      testLines.length <= maxLines &&
+      totalTextHeight <= maxTextBlockHeight &&
+      joined === original
+    ) {
+      chosenFontSize = size;
+      lines = testLines;
+      break;
+    }
+  }
+
+  if (lines.length === 0) {
+    ctx.font = `bold 16px "Averta"`;
+    lineHeight = 16 * 1.3;
+    lines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
+  }
+
   ctx.fillStyle = '#4F4F4F';
-  ctx.font = `bold ${headlineFontSize}px "Averta"`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
-  ctx.fillText(overlayText, targetWidth / 2, topImageHeight + 50);
+  ctx.font = `bold ${chosenFontSize}px "Averta"`;
+
+  const totalTextHeight = lines.length * lineHeight;
+  let startY = topImageHeight + 40;
+
+  lines.forEach((line, index) => {
+    ctx.fillText(line, targetWidth / 2, startY + index * lineHeight);
+  });
 
   // === Button "JETZT BESUCHEN" ===
   const buttonText = 'JETZT BESUCHEN';
@@ -50,13 +81,11 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, target
   const buttonWidth = textWidth + buttonPaddingX * 2;
   const buttonHeight = buttonFontSize + buttonPaddingY * 2;
   const buttonX = targetWidth / 2 - buttonWidth / 2;
-  const buttonY = targetHeight * 0.82;
+  const buttonY = startY + totalTextHeight + 40;
 
-  // Button Hintergrund
   ctx.fillStyle = '#A25C48';
   ctx.fillRect(buttonX, buttonY, buttonWidth, buttonHeight);
 
-  // Button Text
   ctx.fillStyle = '#FFFFFF';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -64,7 +93,7 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, target
 
   // === URL unter dem Button ===
   const urlText = website || "www.creatisto.com";
-  const urlFontSize = Math.floor(headlineFontSize * 0.5);
+  const urlFontSize = Math.floor(chosenFontSize * 0.5);
   ctx.font = `bold ${urlFontSize}px "Averta"`;
   ctx.fillStyle = '#4F4F4F';
   ctx.textAlign = 'center';
@@ -75,3 +104,56 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, target
 
   return canvas;
 };
+
+// === Hilfsfunktionen ===
+function breakLongWord(ctx, word, maxWidth) {
+  let parts = [], current = '';
+  for (let char of word) {
+    const test = current + char;
+    if (ctx.measureText(test).width > maxWidth) {
+      if (current.length > 0) {
+        parts.push(current + '-');
+        current = char;
+      } else {
+        parts.push(char);
+        current = '';
+      }
+    } else {
+      current = test;
+    }
+  }
+  if (current.length > 0) parts.push(current);
+  return parts;
+}
+
+function wrapText(ctx, text, maxWidth, maxLines) {
+  const words = text.split(' ');
+  let lines = [], currentLine = '';
+
+  for (let word of words) {
+    if (ctx.measureText(word).width > maxWidth) {
+      const broken = breakLongWord(ctx, word, maxWidth);
+      for (let part of broken) {
+        if (currentLine.length > 0) {
+          lines.push(currentLine);
+          currentLine = '';
+        }
+        lines.push(part);
+        if (lines.length === maxLines) return lines;
+      }
+      continue;
+    }
+
+    const testLine = currentLine ? currentLine + ' ' + word : word;
+    if (ctx.measureText(testLine).width <= maxWidth) {
+      currentLine = testLine;
+    } else {
+      lines.push(currentLine);
+      currentLine = word;
+      if (lines.length === maxLines) return lines;
+    }
+  }
+
+  if (currentLine && lines.length < maxLines) lines.push(currentLine);
+  return lines;
+}
