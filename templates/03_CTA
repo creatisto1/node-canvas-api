@@ -4,18 +4,21 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, target
   const canvas = createCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext('2d');
 
-  // === Hintergrundfarbe ===
-  ctx.fillStyle = '#FFF9D9'; // Helles Gelb statt Beige
+  // === Konstante Höhe für unteren gelben Bereich ===
+  const bottomAreaHeight = 495;
+  const imageAreaHeight = targetHeight - bottomAreaHeight;
+
+  // === Hintergrund komplett Gelb ===
+  ctx.fillStyle = '#FFF9D9'; // Helles Gelb
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
-  // === Bild einfügen (proportional skaliert & zentriert im oberen Bereich) ===
-  const topImageHeight = targetHeight * 0.6;
+  // === Bild proportional skalieren & zentrieren im Bildbereich ===
   const imgAspect = img.width / img.height;
-  const areaAspect = targetWidth / topImageHeight;
+  const areaAspect = targetWidth / imageAreaHeight;
 
   let drawWidth, drawHeight;
   if (imgAspect > areaAspect) {
-    drawHeight = topImageHeight;
+    drawHeight = imageAreaHeight;
     drawWidth = drawHeight * imgAspect;
   } else {
     drawWidth = targetWidth;
@@ -23,16 +26,16 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, target
   }
 
   const drawX = (targetWidth - drawWidth) / 2;
-  const drawY = (topImageHeight - drawHeight) / 2;
+  const drawY = (imageAreaHeight - drawHeight) / 2;
   ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
 
-  // === Overlay Text (Überschrift) ===
+  // === Overlay Text ===
   const headlineFontSize = Math.floor(targetHeight * 0.045);
   ctx.fillStyle = '#4F4F4F';
   ctx.font = `bold ${headlineFontSize}px "Averta"`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
-  ctx.fillText(overlayText, targetWidth / 2, topImageHeight + 50); // vorher 40 → jetzt 50px tiefer
+  ctx.fillText(overlayText, targetWidth / 2, imageAreaHeight + 50); // 50px unter dem Bildbereich
 
   // === Button "JETZT BESUCHEN" ===
   const buttonText = 'JETZT BESUCHEN';
@@ -45,9 +48,11 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, target
   const buttonWidth = textWidth + buttonPaddingX * 2;
   const buttonHeight = buttonFontSize + buttonPaddingY * 2;
   const buttonX = targetWidth / 2 - buttonWidth / 2;
-  const buttonY = targetHeight * 0.82;
 
-  ctx.fillStyle = '#4AC2C2'; // Neue Button-Farbe (Türkis)
+  // Position Button ca. 110px unter dem Overlay-Text
+  const buttonY = imageAreaHeight + 50 + headlineFontSize + 30;
+
+  ctx.fillStyle = '#4AC2C2'; // Türkis
   ctx.fillRect(buttonX, buttonY, buttonWidth, buttonHeight);
 
   ctx.fillStyle = '#FFFFFF';
