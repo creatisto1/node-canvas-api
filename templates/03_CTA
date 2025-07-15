@@ -1,0 +1,45 @@
+const { createCanvas } = require('canvas');
+
+module.exports = async function generateTemplate_03_CTA(img, overlayText, targetWidth, targetHeight, website) {
+  const canvas = createCanvas(targetWidth, targetHeight);
+  const ctx = canvas.getContext('2d');
+
+  // === Hintergrundfarbe unten ===
+  ctx.fillStyle = '#FDF8F6';
+  ctx.fillRect(0, 0, targetWidth, targetHeight);
+
+  // === Oben zentrales Bild (anstatt beiger Bereich + Cover) ===
+  const topImageHeight = targetHeight * 0.6;
+  ctx.drawImage(img, 0, 0, targetWidth, topImageHeight);
+
+  // === Overlay Text (Überschrift) ===
+  const headlineFontSize = Math.floor(targetHeight * 0.045);
+  ctx.fillStyle = '#4F4F4F';
+  ctx.font = `bold ${headlineFontSize}px "Averta"`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.fillText(overlayText, targetWidth / 2, topImageHeight + 30);
+
+  // === Button "JETZT BESUCHEN" ===
+  const buttonText = 'JETZT BESUCHEN';
+  const buttonFontSize = Math.floor(targetHeight * 0.035);
+  const buttonPaddingX = 40;
+  const buttonPaddingY = 20;
+
+  ctx.font = `bold ${buttonFontSize}px "Averta"`;
+  const textWidth = ctx.measureText(buttonText).width;
+  const buttonWidth = textWidth + buttonPaddingX * 2;
+  const buttonHeight = buttonFontSize + buttonPaddingY * 2;
+  const buttonX = targetWidth / 2 - buttonWidth / 2;
+  const buttonY = targetHeight * 0.82;
+
+  ctx.fillStyle = '#A25C48';
+  ctx.fillRect(buttonX, buttonY, buttonWidth, buttonHeight);
+
+  ctx.fillStyle = '#FFFFFF';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(buttonText, targetWidth / 2, buttonY + buttonHeight / 2);
+
+  return canvas;
+};
