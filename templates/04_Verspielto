@@ -73,8 +73,8 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   // 🔽 Reduziere die Höhe um 20 %
   rectHeight *= 0.8;
 
-  // 🔼 Box oben positionieren (10 % vom oberen Rand)
-  const rectY = targetHeight * 0.1;
+  // 🔼 Box oben positionieren (10 % vom oberen Rand) und 15px weiter nach oben
+  const rectY = targetHeight * 0.1 - 15;
   const rectX = (targetWidth - rectWidth) / 2;
 
   // === Hintergrundbox ===
