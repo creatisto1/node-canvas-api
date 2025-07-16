@@ -68,13 +68,14 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   const urlPaddingTop = padding * 0.6;
 
   const rectWidth = maxTextWidth + padding * 2;
-  let rectHeight = totalTextHeight + padding * 2 + urlLineHeight + urlPaddingTop;
+  let fullHeight = totalTextHeight + padding * 2 + urlLineHeight + urlPaddingTop;
 
-  // 🔽 Reduziere die Höhe um 20 %
-  rectHeight *= 0.8;
+  // 🔽 Reduziere Höhe um 20 %
+  const rectHeight = fullHeight * 0.8;
 
-  // 🔼 Box oben positionieren (10 % vom oberen Rand) und 15px weiter nach oben
-  const rectY = targetHeight * 0.1 - 15;
+  // 🔼 Positioniere Box 15 px weiter oben
+  const rawY = targetHeight * 0.1 - 15;
+  const rectY = Math.max(0, rawY);
   const rectX = (targetWidth - rectWidth) / 2;
 
   // === Hintergrundbox ===
@@ -127,13 +128,14 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.fillStyle = 'white';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
+  ctx.font = `900 ${chosenFontSize}px "Averta"`;
   lines.forEach((line, index) => {
     const y = rectY + padding + index * lineHeight;
     ctx.fillText(line, targetWidth / 2, y);
   });
   ctx.restore();
 
-  // === URL Text ===
+  // === URL Text (in der Box) ===
   ctx.save();
   ctx.fillStyle = 'white';
   ctx.font = `bold ${urlFontSize}px "Averta"`;
