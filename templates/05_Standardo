@@ -18,80 +18,59 @@ module.exports = async function generateTemplate(
   // === Vignettierung ===
   drawVignette(ctx, targetWidth, targetHeight);
 
-  // === Text & Box-Parameter ===
+  // === Layout-Parameter ===
   const padding = 20;
   const maxTextWidth = targetWidth * 0.8;
   const maxLines = 2;
-
-  // Die ursprüngliche Box-Höhe wird später berechnet, um 20% reduziert
-  // Wir müssen die Fontgröße dynamisch anpassen, damit Text + URL in die neue kleinere Box passt
-
-  // URL vorbereiten
   const urlText = website || "www.creatisto.com";
-  let urlFontSizeStart = Math.floor(22 * 1.5);
-  const maxUrlWidth = maxTextWidth;
+  const fixedUrlFontSize = 33; // bleibt konstant
+  const urlLineHeight = fixedUrlFontSize * 1.3;
+  const urlPaddingTop = padding * 0.6;
 
-  // Dynamische Größenanpassung - wir probieren Fontgrößen runter bis alles passt
+  // === Maximale Boxhöhe (20 % kleiner als vorher) ===
+  const maxBoxHeight = targetHeight * 0.25 * 0.8;
+
+  // === Finde passende Textgröße ===
   let chosenFontSize = 128;
-  let urlFontSize = urlFontSizeStart;
   let lines = [];
   let lineHeight = 0;
-  let urlLineHeight = 0;
 
-  // Hilfsfunktion für Text und URL prüfen
-  function fitsInBox(textSize, urlSize) {
-    ctx.font = `900 ${textSize}px "Averta"`;
-    lineHeight = textSize * 1.3;
-    lines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
-    const totalTextHeight = lines.length * lineHeight;
+  for (let size = 128; size >= 16; size -= 2) {
+    ctx.font = `900 ${size}px "Averta"`;
+    lineHeight = size * 1.3;
+    const testLines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
+    const totalTextHeight = testLines.length * lineHeight;
+    const totalBoxHeight = totalTextHeight + padding * 2 + urlLineHeight + urlPaddingTop;
+    const joined = testLines.join('').replace(/-/g, '').replace(/\s/g, '');
+    const original = overlayText.replace(/-/g, '').replace(/\s/g, '');
 
-    ctx.font = `bold ${urlSize}px "Averta"`;
-    urlLineHeight = urlSize * 1.3;
-    
-    // Gesamtboxhöhe (inkl. Padding und Abstand URL)
-    const urlPaddingTop = padding * 0.6;
-    const boxHeight = totalTextHeight + padding * 2 + urlLineHeight + urlPaddingTop;
-
-    // Box ist 20% kleiner als ursprüngliche Max-Box-Höhe (25% von targetHeight)
-    const maxBoxHeight = targetHeight * 0.25 * 0.8;
-
-    return boxHeight <= maxBoxHeight;
-  }
-
-  // Versuche, eine passende Kombination aus Overlay- und URL-Fontgröße zu finden
-  outer: for (let textSize = 128; textSize >= 16; textSize -= 2) {
-    for (let uSize = urlFontSizeStart; uSize >= 12; uSize -= 1) {
-      if (fitsInBox(textSize, uSize)) {
-        chosenFontSize = textSize;
-        urlFontSize = uSize;
-        break outer;
-      }
+    if (
+      testLines.length <= maxLines &&
+      totalBoxHeight <= maxBoxHeight &&
+      joined === original
+    ) {
+      chosenFontSize = size;
+      lines = testLines;
+      break;
     }
   }
 
-  // Falls keine Kombination passt, setze auf Minimum
-  if (chosenFontSize === 128 && !fitsInBox(128, urlFontSizeStart)) {
-    chosenFontSize = 16;
-    urlFontSize = 12;
-    fitsInBox(chosenFontSize, urlFontSize);
+  if (lines.length === 0) {
+    ctx.font = `900 16px "Averta"`;
+    lineHeight = 16 * 1.3;
+    lines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
   }
 
-  // Berechne Box-Größe mit finalen Größen
-  const urlPaddingTop = padding * 0.6;
+  // === Final Box-Berechnung ===
+  const totalTextHeight = lines.length * lineHeight;
   const rectWidth = maxTextWidth + padding * 2;
-  const rectHeight = lines.length * lineHeight + padding * 2 + urlLineHeight + urlPaddingTop;
+  const rectHeight = totalTextHeight + padding * 2 + urlLineHeight + urlPaddingTop;
 
-  // Ursprüngliche vertikale Position der Box (vor Verschiebung)
-  const verticalPositionFactor = 0.8;
-  let rectY = targetHeight * verticalPositionFactor - rectHeight / 2;
-
-  // 1. Verschiebung um 850px nach oben
-  rectY -= 850;
-
-  // X-Position bleibt mittig
+  // === Blaue Box um 850px nach oben verschieben ===
+  let rectY = targetHeight * 0.8 - rectHeight / 2 - 850;
   const rectX = (targetWidth - rectWidth) / 2;
 
-  // === Blaue Box zeichnen ===
+  // === Zeichne Hintergrundbox ===
   const cornerRadius = 36;
   ctx.save();
   ctx.shadowColor = 'rgba(0,0,0,0.08)';
@@ -101,7 +80,7 @@ module.exports = async function generateTemplate(
   ctx.fill();
   ctx.restore();
 
-  // === Overlaytext zeichnen ===
+  // === Zeichne Overlaytext ===
   ctx.save();
   ctx.fillStyle = 'white';
   ctx.textAlign = 'center';
@@ -113,23 +92,23 @@ module.exports = async function generateTemplate(
   });
   ctx.restore();
 
-  // === URL zeichnen ===
+  // === Zeichne URL ===
   ctx.save();
   ctx.fillStyle = 'white';
-  ctx.font = `bold ${urlFontSize}px "Averta"`;
+  ctx.font = `bold ${fixedUrlFontSize}px "Averta"`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
   ctx.fillText(
     urlText,
     targetWidth / 2,
-    rectY + padding + lines.length * lineHeight + urlPaddingTop
+    rectY + padding + totalTextHeight + urlPaddingTop
   );
   ctx.restore();
 
   return canvas;
 };
 
-// === Hilfsfunktionen === (keine Änderungen)
+// === Hilfsfunktionen ===
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
