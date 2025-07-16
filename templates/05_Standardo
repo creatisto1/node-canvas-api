@@ -18,98 +18,80 @@ module.exports = async function generateTemplate(
   // === Vignettierung ===
   drawVignette(ctx, targetWidth, targetHeight);
 
-  // === Text vorbereiten ===
+  // === Text & Box-Parameter ===
   const padding = 20;
   const maxTextWidth = targetWidth * 0.8;
-  const maxTextBlockHeight = targetHeight * 0.25;
   const maxLines = 2;
 
-  let chosenFontSize = 16;
+  // Die ursprüngliche Box-Höhe wird später berechnet, um 20% reduziert
+  // Wir müssen die Fontgröße dynamisch anpassen, damit Text + URL in die neue kleinere Box passt
+
+  // URL vorbereiten
+  const urlText = website || "www.creatisto.com";
+  let urlFontSizeStart = Math.floor(22 * 1.5);
+  const maxUrlWidth = maxTextWidth;
+
+  // Dynamische Größenanpassung - wir probieren Fontgrößen runter bis alles passt
+  let chosenFontSize = 128;
+  let urlFontSize = urlFontSizeStart;
   let lines = [];
   let lineHeight = 0;
+  let urlLineHeight = 0;
 
-  // Fontgröße so anpassen, dass Text + URL in Kasten mit 20% reduzierter Höhe passen
-  // Wir rechnen erstmal die reduzierte Kastenhöhe vor:
-  let estimatedUrlFontSize = Math.floor(22 * 1.5);
-  let estimatedUrlLineHeight = estimatedUrlFontSize * 1.3;
-  let rectHeightMax = maxTextBlockHeight + padding * 2 + estimatedUrlLineHeight + padding * 0.6;
-  rectHeightMax = rectHeightMax * 0.8; // 20% kleiner
-
-  // Versuchen, die Fontgröße so zu finden, dass Text + URL reinpassen
-  for (let size = 128; size >= 16; size -= 2) {
-    ctx.font = `900 ${size}px "Averta"`;
-    lineHeight = size * 1.3;
-    const testLines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
-    const totalTextHeight = testLines.length * lineHeight;
-
-    // URL Fontgröße für maxTextWidth prüfen (muss auch reinpassen)
-    let urlFontSize = estimatedUrlFontSize;
-    let urlLineHeight = 0;
-    for (let s = urlFontSize; s >= 12; s--) {
-      ctx.font = `bold ${s}px "Averta"`;
-      const metrics = ctx.measureText(website || "www.creatisto.com");
-      if (metrics.width <= maxTextWidth) {
-        urlFontSize = s;
-        urlLineHeight = s * 1.3;
-        break;
-      }
-    }
-    if (!urlLineHeight) urlLineHeight = urlFontSize * 1.3;
-
-    const totalHeight = totalTextHeight + padding * 2 + urlLineHeight + padding * 0.6;
-
-    // Check ob Gesamt in den 80% max Kasten reinpasst
-    if (totalHeight <= rectHeightMax) {
-      chosenFontSize = size;
-      lines = testLines;
-      estimatedUrlFontSize = urlFontSize;
-      estimatedUrlLineHeight = urlLineHeight;
-      break;
-    }
-  }
-
-  // Falls keine passende Größe gefunden, fallback:
-  if (lines.length === 0) {
-    chosenFontSize = 16;
-    ctx.font = `900 ${chosenFontSize}px "Averta"`;
-    lineHeight = chosenFontSize * 1.3;
+  // Hilfsfunktion für Text und URL prüfen
+  function fitsInBox(textSize, urlSize) {
+    ctx.font = `900 ${textSize}px "Averta"`;
+    lineHeight = textSize * 1.3;
     lines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
+    const totalTextHeight = lines.length * lineHeight;
 
-    // URL Fontgröße anpassen
-    estimatedUrlFontSize = 22;
-    for (let s = estimatedUrlFontSize; s >= 12; s--) {
-      ctx.font = `bold ${s}px "Averta"`;
-      const metrics = ctx.measureText(website || "www.creatisto.com");
-      if (metrics.width <= maxTextWidth) {
-        estimatedUrlFontSize = s;
-        estimatedUrlLineHeight = s * 1.3;
-        break;
+    ctx.font = `bold ${urlSize}px "Averta"`;
+    urlLineHeight = urlSize * 1.3;
+    
+    // Gesamtboxhöhe (inkl. Padding und Abstand URL)
+    const urlPaddingTop = padding * 0.6;
+    const boxHeight = totalTextHeight + padding * 2 + urlLineHeight + urlPaddingTop;
+
+    // Box ist 20% kleiner als ursprüngliche Max-Box-Höhe (25% von targetHeight)
+    const maxBoxHeight = targetHeight * 0.25 * 0.8;
+
+    return boxHeight <= maxBoxHeight;
+  }
+
+  // Versuche, eine passende Kombination aus Overlay- und URL-Fontgröße zu finden
+  outer: for (let textSize = 128; textSize >= 16; textSize -= 2) {
+    for (let uSize = urlFontSizeStart; uSize >= 12; uSize -= 1) {
+      if (fitsInBox(textSize, uSize)) {
+        chosenFontSize = textSize;
+        urlFontSize = uSize;
+        break outer;
       }
     }
   }
 
-  // === Box-Berechnung ===
-  ctx.font = `900 ${chosenFontSize}px "Averta"`;
-  const totalTextHeight = lines.length * lineHeight;
+  // Falls keine Kombination passt, setze auf Minimum
+  if (chosenFontSize === 128 && !fitsInBox(128, urlFontSizeStart)) {
+    chosenFontSize = 16;
+    urlFontSize = 12;
+    fitsInBox(chosenFontSize, urlFontSize);
+  }
+
+  // Berechne Box-Größe mit finalen Größen
   const urlPaddingTop = padding * 0.6;
-
   const rectWidth = maxTextWidth + padding * 2;
-  let rectHeight = totalTextHeight + padding * 2 + estimatedUrlLineHeight + urlPaddingTop;
+  const rectHeight = lines.length * lineHeight + padding * 2 + urlLineHeight + urlPaddingTop;
 
-  // 20% kleinerer Kasten
-  rectHeight = rectHeight * 0.8;
-
-  // Kasten nach oben verschieben (ca. 20% des Canvas-Höhe von unten weg)
-  // Beim vorherigen Template war verticalPositionFactor = 0.8 (also 80% von Höhe)
-  // Jetzt verschieben wir den Kasten höher, z.B. auf 0.65 von Höhe
-  const verticalPositionFactor = 0.65;
+  // Ursprüngliche vertikale Position der Box (vor Verschiebung)
+  const verticalPositionFactor = 0.8;
   let rectY = targetHeight * verticalPositionFactor - rectHeight / 2;
 
-  if (rectY < 0) rectY = 0; // sicherstellen, dass Kasten nicht rausfällt
+  // 1. Verschiebung um 850px nach oben
+  rectY -= 850;
 
+  // X-Position bleibt mittig
   const rectX = (targetWidth - rectWidth) / 2;
 
-  // === Hintergrundbox mit 90% Deckkraft (alpha=0.9) ===
+  // === Blaue Box zeichnen ===
   const cornerRadius = 36;
   ctx.save();
   ctx.shadowColor = 'rgba(0,0,0,0.08)';
@@ -119,34 +101,35 @@ module.exports = async function generateTemplate(
   ctx.fill();
   ctx.restore();
 
-  // === Text zeichnen (weiß, ohne Schatten) ===
+  // === Overlaytext zeichnen ===
   ctx.save();
   ctx.fillStyle = 'white';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
+  ctx.font = `900 ${chosenFontSize}px "Averta"`;
   lines.forEach((line, index) => {
     const y = rectY + padding + index * lineHeight;
     ctx.fillText(line, targetWidth / 2, y);
   });
   ctx.restore();
 
-  // === URL innerhalb der Box (weiß, ohne Schatten) ===
+  // === URL zeichnen ===
   ctx.save();
   ctx.fillStyle = 'white';
-  ctx.font = `bold ${estimatedUrlFontSize}px "Averta"`;
+  ctx.font = `bold ${urlFontSize}px "Averta"`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
   ctx.fillText(
-    website || "www.creatisto.com",
+    urlText,
     targetWidth / 2,
-    rectY + padding + totalTextHeight + urlPaddingTop
+    rectY + padding + lines.length * lineHeight + urlPaddingTop
   );
   ctx.restore();
 
   return canvas;
 };
 
-// === Hilfsfunktionen ===
+// === Hilfsfunktionen === (keine Änderungen)
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
