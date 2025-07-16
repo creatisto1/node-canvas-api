@@ -12,30 +12,41 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   // === Vignettierung ===
   drawVignette(ctx, targetWidth, targetHeight);
 
-  // === Text vorbereiten ===
   const padding = 40;
   const maxTextWidth = targetWidth * 0.8;
-  const maxTextBlockHeight = targetHeight * 0.25;
+  const maxBoxHeight = targetHeight * 0.25;
   const maxLines = 2;
 
+  const urlText = website || "www.creatisto.com";
   let chosenFontSize = 16;
   let lines = [];
   let lineHeight = 0;
+  let urlFontSize = 14;
+  let urlLineHeight = 0;
 
   for (let size = 128; size >= 16; size -= 2) {
     ctx.font = `900 ${size}px "Averta"`;
     lineHeight = size * 1.3;
     const testLines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
     const totalTextHeight = testLines.length * lineHeight;
+
+    ctx.font = `bold ${Math.floor(size * 0.5)}px "Averta"`;
+    const urlHeight = size * 0.5 * 1.3;
+
+    const fullHeight = totalTextHeight + urlHeight + padding * 2;
+
     const joined = testLines.join('').replace(/-/g, '').replace(/\s/g, '');
     const original = overlayText.replace(/-/g, '').replace(/\s/g, '');
+
     if (
       testLines.length <= maxLines &&
-      totalTextHeight <= maxTextBlockHeight &&
+      fullHeight <= maxBoxHeight &&
       joined === original
     ) {
       chosenFontSize = size;
       lines = testLines;
+      urlFontSize = Math.floor(size * 0.5);
+      urlLineHeight = urlFontSize * 1.3;
       break;
     }
   }
@@ -44,84 +55,24 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
     ctx.font = `900 16px "Averta"`;
     lineHeight = 16 * 1.3;
     lines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
+    urlFontSize = 10;
+    urlLineHeight = urlFontSize * 1.3;
   }
 
-  // === URL vorbereiten ===
-  const urlText = website || "www.creatisto.com";
-  let urlFontSize = Math.floor(chosenFontSize * 0.5);
-  let urlLineHeight = urlFontSize * 1.3;
-  const maxUrlWidth = maxTextWidth;
-
-  for (let size = urlFontSize; size >= 10; size--) {
-    ctx.font = `bold ${size}px "Averta"`;
-    const metrics = ctx.measureText(urlText);
-    if (metrics.width <= maxUrlWidth) {
-      urlFontSize = size;
-      urlLineHeight = size * 1.3;
-      break;
-    }
-  }
-
-  // === Box-Berechnung ===
-  ctx.font = `900 ${chosenFontSize}px "Averta"`;
   const totalTextHeight = lines.length * lineHeight;
-  const urlPaddingTop = padding * 0.6;
-
+  const boxHeight = totalTextHeight + urlLineHeight + padding * 2;
   const rectWidth = maxTextWidth + padding * 2;
-  let fullHeight = totalTextHeight + padding * 2 + urlLineHeight + urlPaddingTop;
-
-  // 🔽 Reduziere Höhe um 20 %
-  const rectHeight = fullHeight * 0.8;
-
-  // 🔼 Positioniere Box 15 px weiter oben
-  const rawY = targetHeight * 0.1 - 15;
-  const rectY = Math.max(0, rawY);
   const rectX = (targetWidth - rectWidth) / 2;
+  const rectY = Math.max(0, targetHeight * 0.1 - 15);
 
   // === Hintergrundbox ===
   ctx.save();
   ctx.fillStyle = 'rgba(173, 216, 230, 1)';
-  ctx.fillRect(rectX, rectY, rectWidth, rectHeight);
+  ctx.fillRect(rectX, rectY, rectWidth, boxHeight);
   ctx.restore();
 
-  // === Weiße Wellenlinie ===
-  const lineInset = 18;
-  const waveAmplitude = 6;
-  const waveLength = 40;
-
-  ctx.save();
-  ctx.strokeStyle = 'white';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-
-  // Oben
-  for (let x = rectX + lineInset; x <= rectX + rectWidth - lineInset; x++) {
-    const y = rectY + lineInset + waveAmplitude * Math.sin(((x - (rectX + lineInset)) / waveLength) * 2 * Math.PI);
-    if (x === rectX + lineInset) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
-  }
-
-  // Rechts
-  for (let y = rectY + lineInset; y <= rectY + rectHeight - lineInset; y++) {
-    const x = rectX + rectWidth - lineInset + waveAmplitude * Math.sin(((y - (rectY + lineInset)) / waveLength) * 2 * Math.PI);
-    ctx.lineTo(x, y);
-  }
-
-  // Unten
-  for (let x = rectX + rectWidth - lineInset; x >= rectX + lineInset; x--) {
-    const y = rectY + rectHeight - lineInset + waveAmplitude * Math.sin(((x - (rectX + lineInset)) / waveLength) * 2 * Math.PI);
-    ctx.lineTo(x, y);
-  }
-
-  // Links
-  for (let y = rectY + rectHeight - lineInset; y >= rectY + lineInset; y--) {
-    const x = rectX + lineInset + waveAmplitude * Math.sin(((y - (rectY + lineInset)) / waveLength) * 2 * Math.PI);
-    ctx.lineTo(x, y);
-  }
-
-  ctx.closePath();
-  ctx.stroke();
-  ctx.restore();
+  // === Wellenlinie ===
+  drawWaveBorder(ctx, rectX, rectY, rectWidth, boxHeight);
 
   // === Overlay Text ===
   ctx.save();
@@ -129,13 +80,13 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
   ctx.font = `900 ${chosenFontSize}px "Averta"`;
-  lines.forEach((line, index) => {
-    const y = rectY + padding + index * lineHeight;
+  lines.forEach((line, i) => {
+    const y = rectY + padding + i * lineHeight;
     ctx.fillText(line, targetWidth / 2, y);
   });
   ctx.restore();
 
-  // === URL Text (in der Box) ===
+  // === URL Text ===
   ctx.save();
   ctx.fillStyle = 'white';
   ctx.font = `bold ${urlFontSize}px "Averta"`;
@@ -144,7 +95,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   ctx.fillText(
     urlText,
     targetWidth / 2,
-    rectY + padding + totalTextHeight + urlPaddingTop
+    rectY + padding + totalTextHeight
   );
   ctx.restore();
 
@@ -202,6 +153,46 @@ function wrapText(ctx, text, maxWidth, maxLines) {
 
   if (currentLine && lines.length < maxLines) lines.push(currentLine);
   return lines;
+}
+
+function drawWaveBorder(ctx, rectX, rectY, rectWidth, rectHeight) {
+  const lineInset = 18;
+  const waveAmplitude = 6;
+  const waveLength = 40;
+
+  ctx.save();
+  ctx.strokeStyle = 'white';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+
+  // Oben
+  for (let x = rectX + lineInset; x <= rectX + rectWidth - lineInset; x++) {
+    const y = rectY + lineInset + waveAmplitude * Math.sin(((x - (rectX + lineInset)) / waveLength) * 2 * Math.PI);
+    if (x === rectX + lineInset) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+
+  // Rechts
+  for (let y = rectY + lineInset; y <= rectY + rectHeight - lineInset; y++) {
+    const x = rectX + rectWidth - lineInset + waveAmplitude * Math.sin(((y - (rectY + lineInset)) / waveLength) * 2 * Math.PI);
+    ctx.lineTo(x, y);
+  }
+
+  // Unten
+  for (let x = rectX + rectWidth - lineInset; x >= rectX + lineInset; x--) {
+    const y = rectY + rectHeight - lineInset + waveAmplitude * Math.sin(((x - (rectX + lineInset)) / waveLength) * 2 * Math.PI);
+    ctx.lineTo(x, y);
+  }
+
+  // Links
+  for (let y = rectY + rectHeight - lineInset; y >= rectY + lineInset; y--) {
+    const x = rectX + lineInset + waveAmplitude * Math.sin(((y - (rectY + lineInset)) / waveLength) * 2 * Math.PI);
+    ctx.lineTo(x, y);
+  }
+
+  ctx.closePath();
+  ctx.stroke();
+  ctx.restore();
 }
 
 function drawVignette(ctx, width, height) {
