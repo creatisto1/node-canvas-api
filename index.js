@@ -12,7 +12,7 @@ const toprightCrop = require('./templatesCrop/05_toprightCrop');
 const verspielt = require('./templates/02_Verspielt');
 const centerCropZoom = require('./templatesCrop/01_1_centerCropZoom');
 const cta = require('./templates/03_CTA');
-const cta = require('./templates/04_Verspielto');
+const verspielto = require('./templates/04_Verspielto');
 
 const app = express();
 const port = process.env.PORT || 3000;
