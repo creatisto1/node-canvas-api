@@ -102,54 +102,58 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, target
 };
 
 // === Hilfsfunktionen ===
-function breakLongWord(ctx, word, maxWidth) {
-  let parts = [], current = '';
-  for (let char of word) {
-    const test = current + char;
-    if (ctx.measureText(test).width > maxWidth) {
-      if (current.length > 0) {
-        parts.push(current + '-');
-        current = char;
-      } else {
-        parts.push(char);
-        current = '';
-      }
-    } else {
-      current = test;
-    }
-  }
-  if (current.length > 0) parts.push(current);
-  return parts;
-}
 
 function wrapText(ctx, text, maxWidth, maxLines) {
   const words = text.split(' ');
-  let lines = [], currentLine = '';
+  let lines = [];
+  let currentLine = '';
 
   for (let word of words) {
-    if (ctx.measureText(word).width > maxWidth) {
-      const broken = breakLongWord(ctx, word, maxWidth);
-      for (let part of broken) {
-        if (currentLine.length > 0) {
-          lines.push(currentLine);
-          currentLine = '';
-        }
-        lines.push(part);
-        if (lines.length >= maxLines) return lines;
-      }
-      continue;
-    }
+    const testLine = currentLine ? `${currentLine} ${word}` : word;
+    const testWidth = ctx.measureText(testLine).width;
 
-    const testLine = currentLine ? currentLine + ' ' + word : word;
-    if (ctx.measureText(testLine).width <= maxWidth) {
+    if (testWidth <= maxWidth) {
       currentLine = testLine;
     } else {
-      lines.push(currentLine);
-      currentLine = word;
+      if (ctx.measureText(word).width > maxWidth) {
+        const brokenParts = breakLongWord(ctx, word, maxWidth);
+        if (currentLine) {
+          lines.push(currentLine);
+        }
+        for (let part of brokenParts) {
+          if (lines.length >= maxLines) return lines;
+          lines.push(part);
+        }
+        currentLine = '';
+      } else {
+        lines.push(currentLine);
+        currentLine = word;
+      }
+
       if (lines.length >= maxLines) return lines;
     }
   }
 
   if (currentLine && lines.length < maxLines) lines.push(currentLine);
   return lines;
+}
+
+function breakLongWord(ctx, word, maxWidth) {
+  const parts = [];
+  let current = '';
+
+  for (let char of word) {
+    const test = current + char;
+    if (ctx.measureText(test).width > maxWidth) {
+      if (current) {
+        parts.push(current + '-');
+      }
+      current = char;
+    } else {
+      current += char;
+    }
+  }
+
+  if (current) parts.push(current);
+  return parts;
 }
