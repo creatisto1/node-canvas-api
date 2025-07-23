@@ -36,8 +36,9 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, target
     const testLines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
     const totalTextHeight = testLines.length * lineHeight;
 
-    const joined = testLines.join('').replace(/[\s-]/g, '');
-    const original = overlayText.replace(/[\s-]/g, '');
+    // ✅ Kein Entfernen von echten Bindestrichen!
+    const joined = testLines.join('').replace(/\s/g, '');
+    const original = overlayText.replace(/\s/g, '');
 
     if (testLines.length <= maxLines && totalTextHeight <= maxTextBlockHeight && joined === original) {
       chosenFontSize = size;
