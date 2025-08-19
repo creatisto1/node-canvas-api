@@ -89,7 +89,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   // === URL Text ===
   ctx.save();
   ctx.fillStyle = 'white';
-  ctx.font = `bold ${urlFontSize}px "Averta"`;
+  ctx.font = 'bold 18px "Averta"';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
   ctx.fillText(
