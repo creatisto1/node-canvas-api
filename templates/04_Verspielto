@@ -18,7 +18,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   const maxLines = 2;
 
   const urlText = website || "www.creatisto.com";
-  let chosenFontSize = 16;
+  let chosenFontSize = 33;
   let lines = [];
   let lineHeight = 0;
   let urlFontSize = 14;
