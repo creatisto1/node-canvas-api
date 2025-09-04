@@ -69,7 +69,7 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, target
   });
 
   // === Button ===
-  const buttonText = 'JETZT BESUCHEN';
+  const buttonText = 'MEHR ERFAHREN';
   const buttonFontSize = Math.floor(targetHeight * 0.035);
   const buttonPaddingX = 40;
   const buttonPaddingY = 20;
@@ -81,7 +81,7 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, target
   const buttonX = targetWidth / 2 - buttonWidth / 2;
   const buttonY = startY + totalTextHeight + 40;
 
-  ctx.fillStyle = '#A25C48';
+  ctx.fillStyle = '#4AC2C2';
   ctx.fillRect(buttonX, buttonY, buttonWidth, buttonHeight);
 
   ctx.fillStyle = '#FFFFFF';
@@ -91,7 +91,7 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, target
 
   // === URL unter dem Button ===
   const urlText = website || "www.creatisto.com";
-  ctx.font = 'bold 33px "Averta"';
+  ctx.font = 'bold 43px "Averta"';
   ctx.fillStyle = '#4F4F4F';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
