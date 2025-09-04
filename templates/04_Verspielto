@@ -67,7 +67,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
 
   // === Hintergrundbox ===
   ctx.save();
-  ctx.fillStyle = 'rgba(173, 216, 230, 1)';
+  ctx.fillStyle = 'rgb(74, 194, 194)';
   ctx.fillRect(rectX, rectY, rectWidth, boxHeight);
   ctx.restore();
 
@@ -89,7 +89,7 @@ module.exports = async function generateTemplate(img, overlayText, targetWidth, 
   // === URL Text ===
   ctx.save();
   ctx.fillStyle = 'white';
-  ctx.font = 'bold 33px "Averta"';
+  ctx.font = 'bold 43px "Averta"';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
   ctx.fillText(
