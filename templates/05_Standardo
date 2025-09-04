@@ -71,7 +71,7 @@ module.exports = async function generateTemplate(
   const rectX = (targetWidth - rectWidth) / 2;
 
   // === Zeichne Hintergrundbox ===
-  const cornerRadius = 36;
+  const cornerRadius = 26;
   ctx.save();
   ctx.shadowColor = 'rgba(0,0,0,0.08)';
   ctx.shadowBlur = 8;
