@@ -76,7 +76,7 @@ module.exports = async function generateTemplate(
   ctx.shadowColor = 'rgba(0,0,0,0.08)';
   ctx.shadowBlur = 8;
   roundRect(ctx, rectX, rectY, rectWidth, rectHeight, cornerRadius);
-  ctx.fillStyle = 'rgba(74, 194, 194, 0.75)';
+  ctx.fillStyle = 'rgba(74, 194, 194, 0.85)';
   ctx.fill();
   ctx.restore();
 
