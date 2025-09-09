@@ -77,7 +77,7 @@ module.exports = async function generateTemplate_PinterestPin(quadCanvas, overla
   ctx.fillStyle = '#FDF8F6';
   ctx.fillRect(buttonX, buttonY, buttonWidth, buttonHeight);
 
-  ctx.fillStyle = '#FFFFFF';
+  ctx.fillStyle = '#4AC2C2';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(buttonText, targetWidth / 2, buttonY + buttonHeight / 2);
@@ -85,7 +85,7 @@ module.exports = async function generateTemplate_PinterestPin(quadCanvas, overla
   // === URL unter dem Button ===
   const urlText = website ? String(website).trim() : "www.creatisto.com";
   ctx.font = 'bold 43px "Averta"';
-  ctx.fillStyle = '#4F4F4F';
+  ctx.fillStyle = '#FDF8F6';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
 
