@@ -14,6 +14,7 @@ const centerCropZoom = require('./templatesCrop/01_1_centerCropZoom');
 const cta = require('./templates/03_CTA');
 const verspielto = require('./templates/04_Verspielto');
 const standardo = require('./templates/05_Standardo');
+const quadrat = require('./templatesCrop/06_quadrat');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -397,6 +398,37 @@ app.post('/standardo', async (req, res) => {
     const canvas = await standardo(img, overlayText, targetWidth, targetHeight, website);
 
     const filename = `img-standardo-${Date.now()}.png`;
+    const savePath = path.join(publicDir, filename);
+    const out = fs.createWriteStream(savePath);
+    const stream = canvas.createPNGStream();
+
+    stream.pipe(out);
+    out.on('finish', () => {
+      const imgUrl = `${req.protocol}://${req.get('host')}/public/${filename}`;
+      res.json({ imgUrl });
+    });
+
+    // Neue Route: quadrat Template
+app.post('/quadrat', async (req, res) => {
+  const imageUrl = req.body.url;
+  const website = req.body.website || null;
+  let overlayText = req.body.overlay || 'Hello, World!';
+  overlayText = overlayText.toUpperCase();
+
+  console.log('Empfangene Website:', website);
+
+  if (!imageUrl) {
+    return res.status(400).send('Missing "url" in request body');
+  }
+
+  try {
+    const img = await loadImage(imageUrl);
+    const targetWidth = img.width;
+    const targetHeight = img.height;
+
+    const canvas = await quadrat(img, overlayText, targetWidth, targetHeight, website);
+
+    const filename = `img-quadrat-${Date.now()}.png`;
     const savePath = path.join(publicDir, filename);
     const out = fs.createWriteStream(savePath);
     const stream = canvas.createPNGStream();
