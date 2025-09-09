@@ -408,12 +408,16 @@ app.post('/standardo', async (req, res) => {
       res.json({ imgUrl });
     });
 
-    // Neue Route: quadrat Template
+     } catch (error) {
+    console.error('Fehler:', error);
+    res.status(500).send('Fehler beim Verarbeiten des Bildes');
+  }
+});
+
+// Neue Route: quadrat Template
 app.post('/quadrat', async (req, res) => {
   const imageUrl = req.body.url;
-  const website = req.body.website || null;
-  let overlayText = req.body.overlay || 'Hello, World!';
-  overlayText = overlayText.toUpperCase();
+  const website = req.body.website || null; // aktuell ungenutzt, aber belassen falls später gebraucht
 
   console.log('Empfangene Website:', website);
 
@@ -423,10 +427,7 @@ app.post('/quadrat', async (req, res) => {
 
   try {
     const img = await loadImage(imageUrl);
-    const targetWidth = img.width;
-    const targetHeight = img.height;
-
-    const canvas = await quadrat(img, overlayText, targetWidth, targetHeight, website);
+    const canvas = await quadrat(img);  // nur img übergeben
 
     const filename = `img-quadrat-${Date.now()}.png`;
     const savePath = path.join(publicDir, filename);
@@ -444,6 +445,7 @@ app.post('/quadrat', async (req, res) => {
     res.status(500).send('Fehler beim Verarbeiten des Bildes');
   }
 });
+
 app.listen(port, () => {
   console.log(`✅ Server läuft auf http://localhost:${port}`);
 });
