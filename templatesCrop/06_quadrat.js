@@ -23,7 +23,7 @@ module.exports = async function resizeToSquare(img) {
   const canvas = createCanvas(targetSize, targetSize);
   const ctx = canvas.getContext('2d');
 
-  // optional: Hintergrund (weiß oder transparent)
+  // Hintergrundfarbe (weiß)
   ctx.fillStyle = 'white';
   ctx.fillRect(0, 0, targetSize, targetSize);
 
