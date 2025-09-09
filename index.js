@@ -17,7 +17,7 @@ const standardo = require('./templates/05_Standardo');
 const quadrat = require('./templatesCrop/06_quadrat');
 const cta_2 = require('./templates/07_CTA_2');
 const cta_2_inverted = require('./templates/07_CTA_2_inverted');
-const cta_2_St = require('./templates/07_CTA_2_St');
+const cta_2_St = require('./templates/08_CTA_2_St');
 
 const app = express();
 const port = process.env.PORT || 3000;
