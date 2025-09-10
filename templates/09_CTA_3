@@ -1,7 +1,7 @@
 const { createCanvas } = require('canvas');
 
 /**
- * Generiert ein Pinterest-Pin-Canvas für DIY mit harmonischen Wellen
+ * Generiert ein Pinterest-Pin-Canvas für DIY mit harmonischen Wellen über dem Text
  */
 module.exports = function generateTemplate_PinterestDIY(quadCanvas, overlayText, website) {
   const targetWidth = 1000;
@@ -25,25 +25,9 @@ module.exports = function generateTemplate_PinterestDIY(quadCanvas, overlayText,
     }
   }
 
-  // === URL oben auf dem Bild mit weißem Hintergrund ===
-  const urlFontSize = 43 * 1.1; // 10% größer
-  ctx.font = `bold ${urlFontSize}px "Arial", sans-serif`;
-  const urlWidth = ctx.measureText(website).width + 30;
-  const urlHeight = urlFontSize + 20;
-  const urlX = targetWidth / 2 - urlWidth / 2;
-  const urlY = 100;
-
-  ctx.fillStyle = '#FFFFFF';
-  roundRect(ctx, urlX, urlY, urlWidth, urlHeight, 8);
-  ctx.fill();
-
-  ctx.fillStyle = '#d72631';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(website, targetWidth / 2, urlY + urlHeight / 2);
-
   // === Unterer farbiger Bereich mit harmonischen Wellen ===
-  const colorStartY = 1000 - 50;
+  const baseWaveHeight = 80 * 1.08 * 0.3; // max 30% der ursprünglichen Höhe
+  const colorStartY = 1000; // Wellen ragen über Bild, wie aktuell
   const colorHeight = targetHeight - colorStartY;
 
   const gradient = ctx.createLinearGradient(0, colorStartY, 0, targetHeight);
@@ -51,12 +35,11 @@ module.exports = function generateTemplate_PinterestDIY(quadCanvas, overlayText,
   gradient.addColorStop(1, '#077b8a');
 
   ctx.beginPath();
-  const waveCount = 5;
-  const waveAmplitude = 80 * 1.08;
+  const waveCount = 5; // 4-6 harmonische Wellen
   ctx.moveTo(0, colorStartY);
 
   for (let x = 0; x <= targetWidth; x++) {
-    const y = colorStartY + Math.sin((x / targetWidth) * waveCount * Math.PI * 2) * waveAmplitude;
+    const y = colorStartY + Math.sin((x / targetWidth) * waveCount * Math.PI * 2) * baseWaveHeight;
     ctx.lineTo(x, y);
   }
 
@@ -107,12 +90,12 @@ module.exports = function generateTemplate_PinterestDIY(quadCanvas, overlayText,
     lines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
   }
 
-  ctx.fillStyle = '#d72631';
+  ctx.fillStyle = '#FFFFFF'; // Text in weiß
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
   ctx.font = `bold ${chosenFontSize}px "Arial", sans-serif`;
   const totalTextHeight = lines.length * lineHeight;
-  const startY = colorStartY + 40;
+  const startY = colorStartY - 200; // Text bleibt oberhalb Wellen
 
   lines.forEach((line, index) => {
     ctx.fillText(line, targetWidth / 2, startY + index * lineHeight);
@@ -129,16 +112,33 @@ module.exports = function generateTemplate_PinterestDIY(quadCanvas, overlayText,
   const buttonWidth = textWidth + buttonPaddingX * 2;
   const buttonHeight = buttonFontSize + buttonPaddingY * 2;
   const buttonX = targetWidth / 2 - buttonWidth / 2;
-  const buttonY = startY + totalTextHeight + 40 + 50;
+  const buttonY = startY + totalTextHeight + 40 + 50; // 50px tiefer
 
   roundRect(ctx, buttonX, buttonY, buttonWidth, buttonHeight, 8);
-  ctx.fillStyle = '#05575b'; // dunkler als #077b8a
+  ctx.fillStyle = '#05575b'; // Buttonfarbe dunkler
   ctx.fill();
 
-  ctx.fillStyle = '#d72631';
+  ctx.fillStyle = '#FFFFFF'; // Button-Text in weiß
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(buttonText, targetWidth / 2, buttonY + buttonHeight / 2);
+
+  // === URL oben auf dem Bild mit weißem Hintergrund ===
+  let urlFontSize = 43 * 1.1 * 1.1; // nochmal 10% größer
+  ctx.font = `bold ${urlFontSize}px "Arial", sans-serif`;
+  const urlWidth = ctx.measureText(website).width + 30;
+  const urlHeight = urlFontSize + 20;
+  const urlX = targetWidth / 2 - urlWidth / 2;
+  const urlY = 100;
+
+  ctx.fillStyle = '#FFFFFF';
+  roundRect(ctx, urlX, urlY, urlWidth, urlHeight, 8);
+  ctx.fill();
+
+  ctx.fillStyle = '#333333'; // dunkelgrau
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(website, targetWidth / 2, urlY + urlHeight / 2);
 
   return canvas;
 };
