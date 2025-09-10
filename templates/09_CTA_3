@@ -1,7 +1,7 @@
 const { createCanvas /*, registerFont */ } = require('canvas');
 
 /**
- * Generiert ein Pinterest-Pin-Canvas für DIY-Design.
+ * Generiert ein Pinterest-Pin-Canvas für DIY-Design mit angepassten Wellen und Farben.
  */
 module.exports = function generateTemplate_PinterestDIY(quadCanvas, overlayText, website) {
   const targetWidth = 1000;
@@ -12,11 +12,11 @@ module.exports = function generateTemplate_PinterestDIY(quadCanvas, overlayText,
   overlayText = overlayText ? String(overlayText).trim() : 'JETZT REINSCHAUEN';
   website = website ? String(website).trim() : 'www.creatisto.com';
 
-  // === Hintergrundfarbe DIY (pastellig, warm) ===
-  ctx.fillStyle = '#FFF1E6'; // Heller Creme-Ton
+  // === Hintergrundfarbe DIY (warm, pastellig) ===
+  ctx.fillStyle = '#FFF1E6';
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
-  // === Quadrat-Bild oben einfügen (1000x1000) ===
+  // === Quadrat-Bild oben einfügen ===
   if (quadCanvas) {
     try {
       ctx.drawImage(quadCanvas, 0, 0, targetWidth, 1000);
@@ -26,41 +26,43 @@ module.exports = function generateTemplate_PinterestDIY(quadCanvas, overlayText,
   }
 
   // === URL oben auf dem Bild mit weißem Hintergrund ===
-  const urlFontSize = 43;
+  const urlFontSize = 43 * 1.1; // 10% größer
   ctx.font = `bold ${urlFontSize}px "Arial", sans-serif`;
-  const urlWidth = ctx.measureText(website).width + 30; // 15px padding links/rechts
-  const urlHeight = urlFontSize + 20; // 10px padding oben/unten
+  const urlWidth = ctx.measureText(website).width + 30;
+  const urlHeight = urlFontSize + 20;
   const urlX = targetWidth / 2 - urlWidth / 2;
-  const urlY = 100; // 100px vom oberen Rand
+  const urlY = 100;
 
-  // Hintergrund-Box für URL
   ctx.fillStyle = '#FFFFFF';
   roundRect(ctx, urlX, urlY, urlWidth, urlHeight, 8);
   ctx.fill();
 
-  // URL-Text
-  ctx.fillStyle = '#FF6F61'; // Korallen-Rot für DIY-Branding
+  ctx.fillStyle = '#EDC1D9';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(website, targetWidth / 2, urlY + urlHeight / 2);
 
-  // === Unterer farbiger Bereich mit Welle ===
-  const waveHeight = 80 * 1.08;  // 8% größere Amplitude
+  // === Unterer farbiger Bereich mit mehreren Wellen ===
+  const waveHeight = 80 * 1.08;
   const colorStartY = 1000 - 50;
   const colorHeight = targetHeight - colorStartY;
 
   const gradient = ctx.createLinearGradient(0, colorStartY - waveHeight, 0, targetHeight);
-  gradient.addColorStop(0, 'rgba(255,182,193,0)'); // zartes Rosa transparent
-  gradient.addColorStop(0.2, '#FFB6C1'); // Rosa
-  gradient.addColorStop(1, '#FF69B4'); // Pink
+  gradient.addColorStop(0, '#EDC1D9');
+  gradient.addColorStop(0.25, '#AA9697');
+  gradient.addColorStop(0.5, '#ADBBC6');
+  gradient.addColorStop(0.75, '#DBD6DA');
+  gradient.addColorStop(1, '#A78E77');
 
+  // Wave-Path mit 5 Hoch/Tiefpunkten
   ctx.beginPath();
   ctx.moveTo(0, colorStartY);
-  ctx.bezierCurveTo(
-    targetWidth * 0.25, colorStartY - waveHeight,
-    targetWidth * 0.75, colorStartY + waveHeight,
-    targetWidth, colorStartY
-  );
+  const points = 5;
+  for (let i = 0; i <= points; i++) {
+    const x = (i / points) * targetWidth;
+    const yOffset = (i % 2 === 0 ? -1 : 1) * waveHeight;
+    ctx.lineTo(x, colorStartY + yOffset);
+  }
   ctx.lineTo(targetWidth, targetHeight);
   ctx.lineTo(0, targetHeight);
   ctx.closePath();
@@ -79,16 +81,6 @@ module.exports = function generateTemplate_PinterestDIY(quadCanvas, overlayText,
   }
 
   ctx.save();
-  ctx.beginPath();
-  ctx.moveTo(0, colorStartY);
-  ctx.bezierCurveTo(
-    targetWidth * 0.25, colorStartY - waveHeight,
-    targetWidth * 0.75, colorStartY + waveHeight,
-    targetWidth, colorStartY
-  );
-  ctx.lineTo(targetWidth, targetHeight);
-  ctx.lineTo(0, targetHeight);
-  ctx.closePath();
   ctx.clip();
   ctx.drawImage(textureCanvas, 0, colorStartY);
   ctx.restore();
@@ -131,7 +123,7 @@ module.exports = function generateTemplate_PinterestDIY(quadCanvas, overlayText,
 
   // === Button DIY ===
   const buttonText = 'Do it Yourself';
-  const buttonFontSize = Math.max(14, Math.floor(targetHeight * 0.035));
+  const buttonFontSize = Math.max(14, Math.floor(targetHeight * 0.035 * 1.1)); // 10% größer
   const buttonPaddingX = 40;
   const buttonPaddingY = 20;
 
@@ -140,10 +132,10 @@ module.exports = function generateTemplate_PinterestDIY(quadCanvas, overlayText,
   const buttonWidth = textWidth + buttonPaddingX * 2;
   const buttonHeight = buttonFontSize + buttonPaddingY * 2;
   const buttonX = targetWidth / 2 - buttonWidth / 2;
-  const buttonY = startY + totalTextHeight + 40;
+  const buttonY = startY + totalTextHeight + 40 + 50; // 50px tiefer
 
   roundRect(ctx, buttonX, buttonY, buttonWidth, buttonHeight, 8);
-  ctx.fillStyle = '#FF7F50'; // Korallen-Orange
+  ctx.fillStyle = '#A78E77';
   ctx.fill();
 
   ctx.fillStyle = '#FFFFFF';
