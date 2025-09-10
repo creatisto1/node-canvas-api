@@ -1,7 +1,7 @@
-const { createCanvas /*, registerFont */ } = require('canvas');
+const { createCanvas } = require('canvas');
 
 /**
- * Generiert ein Pinterest-Pin-Canvas für DIY-Design mit angepassten Wellen und Farben.
+ * Generiert ein Pinterest-Pin-Canvas für DIY mit harmonischen Wellen
  */
 module.exports = function generateTemplate_PinterestDIY(quadCanvas, overlayText, website) {
   const targetWidth = 1000;
@@ -12,7 +12,7 @@ module.exports = function generateTemplate_PinterestDIY(quadCanvas, overlayText,
   overlayText = overlayText ? String(overlayText).trim() : 'JETZT REINSCHAUEN';
   website = website ? String(website).trim() : 'www.creatisto.com';
 
-  // === Hintergrundfarbe DIY (warm, pastellig) ===
+  // === Hintergrundfarbe ===
   ctx.fillStyle = '#FFF1E6';
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
@@ -37,32 +37,29 @@ module.exports = function generateTemplate_PinterestDIY(quadCanvas, overlayText,
   roundRect(ctx, urlX, urlY, urlWidth, urlHeight, 8);
   ctx.fill();
 
-  ctx.fillStyle = '#EDC1D9';
+  ctx.fillStyle = '#d72631';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(website, targetWidth / 2, urlY + urlHeight / 2);
 
-  // === Unterer farbiger Bereich mit mehreren Wellen ===
-  const waveHeight = 80 * 1.08;
+  // === Unterer farbiger Bereich mit harmonischen Wellen ===
   const colorStartY = 1000 - 50;
   const colorHeight = targetHeight - colorStartY;
 
-  const gradient = ctx.createLinearGradient(0, colorStartY - waveHeight, 0, targetHeight);
-  gradient.addColorStop(0, '#EDC1D9');
-  gradient.addColorStop(0.25, '#AA9697');
-  gradient.addColorStop(0.5, '#ADBBC6');
-  gradient.addColorStop(0.75, '#DBD6DA');
-  gradient.addColorStop(1, '#A78E77');
+  const gradient = ctx.createLinearGradient(0, colorStartY, 0, targetHeight);
+  gradient.addColorStop(0, '#a2d5c6');
+  gradient.addColorStop(1, '#077b8a');
 
-  // Wave-Path mit 5 Hoch/Tiefpunkten
   ctx.beginPath();
+  const waveCount = 5;
+  const waveAmplitude = 80 * 1.08;
   ctx.moveTo(0, colorStartY);
-  const points = 5;
-  for (let i = 0; i <= points; i++) {
-    const x = (i / points) * targetWidth;
-    const yOffset = (i % 2 === 0 ? -1 : 1) * waveHeight;
-    ctx.lineTo(x, colorStartY + yOffset);
+
+  for (let x = 0; x <= targetWidth; x++) {
+    const y = colorStartY + Math.sin((x / targetWidth) * waveCount * Math.PI * 2) * waveAmplitude;
+    ctx.lineTo(x, y);
   }
+
   ctx.lineTo(targetWidth, targetHeight);
   ctx.lineTo(0, targetHeight);
   ctx.closePath();
@@ -110,7 +107,7 @@ module.exports = function generateTemplate_PinterestDIY(quadCanvas, overlayText,
     lines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
   }
 
-  ctx.fillStyle = '#FFFFFF';
+  ctx.fillStyle = '#d72631';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
   ctx.font = `bold ${chosenFontSize}px "Arial", sans-serif`;
@@ -132,13 +129,13 @@ module.exports = function generateTemplate_PinterestDIY(quadCanvas, overlayText,
   const buttonWidth = textWidth + buttonPaddingX * 2;
   const buttonHeight = buttonFontSize + buttonPaddingY * 2;
   const buttonX = targetWidth / 2 - buttonWidth / 2;
-  const buttonY = startY + totalTextHeight + 40 + 50; // 50px tiefer
+  const buttonY = startY + totalTextHeight + 40 + 50;
 
   roundRect(ctx, buttonX, buttonY, buttonWidth, buttonHeight, 8);
-  ctx.fillStyle = '#A78E77';
+  ctx.fillStyle = '#05575b'; // dunkler als #077b8a
   ctx.fill();
 
-  ctx.fillStyle = '#FFFFFF';
+  ctx.fillStyle = '#d72631';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(buttonText, targetWidth / 2, buttonY + buttonHeight / 2);
