@@ -10,9 +10,6 @@ module.exports = function generateTemplate_PinterestPin(quadCanvas, overlayText,
   const canvas = createCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext('2d');
 
-  // Optional: eigene Font registrieren (uncomment + Pfad anpassen)
-  // registerFont('/path/to/OpenSans-Bold.ttf', { family: 'Open Sans', weight: 'bold' });
-
   overlayText = overlayText ? String(overlayText).trim() : 'JETZT REINSCHAUEN';
   website = website ? String(website).trim() : 'www.creatisto.com';
 
@@ -25,14 +22,13 @@ module.exports = function generateTemplate_PinterestPin(quadCanvas, overlayText,
     try {
       ctx.drawImage(quadCanvas, 0, 0, targetWidth, 1000);
     } catch (e) {
-      // Falls quadCanvas kein gültiges Image/Canvas ist, ignore - caller sollte validieren
       console.warn('quadCanvas konnte nicht gezeichnet werden:', e.message);
     }
   }
 
   // === Unterer farbiger Bereich mit Welle ===
-  const waveHeight = 80;
-  const colorStartY = 1000;
+  const waveHeight = 80 * 1.08;  // 8% größere Amplitude
+  const colorStartY = 1000 - 50; // 50px höher
   const colorHeight = targetHeight - colorStartY;
 
   // Farbverlauf erstellen
@@ -131,7 +127,7 @@ module.exports = function generateTemplate_PinterestPin(quadCanvas, overlayText,
 
   // === Button ===
   const buttonText = 'MEHR ERFAHREN';
-  const buttonFontSize = Math.max(14, Math.floor(targetHeight * 0.035)); // min size
+  const buttonFontSize = Math.max(14, Math.floor(targetHeight * 0.035));
   const buttonPaddingX = 40;
   const buttonPaddingY = 20;
 
@@ -142,20 +138,18 @@ module.exports = function generateTemplate_PinterestPin(quadCanvas, overlayText,
   const buttonX = targetWidth / 2 - buttonWidth / 2;
   const buttonY = startY + totalTextHeight + 40;
 
-  // abgerundetes Rechteck (einfach)
   const radius = 8;
   roundRect(ctx, buttonX, buttonY, buttonWidth, buttonHeight, radius);
   ctx.fillStyle = '#2C9C9C';
   ctx.fill();
 
-  // Button-Text
   ctx.fillStyle = '#FFFFFF';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(buttonText, targetWidth / 2, buttonY + buttonHeight / 2);
 
   // === URL unter dem Button ===
-  const urlFontSize = 28; // kleiner gesetzt, 43 war sehr groß
+  const urlFontSize = 43; // wieder größer
   ctx.font = `bold ${urlFontSize}px "Arial", sans-serif`;
   ctx.fillStyle = '#FFFFFF';
   ctx.textAlign = 'center';
@@ -181,40 +175,30 @@ function wrapText(ctx, text, maxWidth, maxLines) {
       continue;
     }
 
-    // passt nicht mehr: push current (falls vorhanden)
     if (current) {
       lines.push(current);
       current = '';
       if (lines.length >= maxLines) break;
-      // re-evaluate this word as new line (fallthrough)
     }
 
-    // Einzelwort länger als maxWidth -> split in Zeichenblöcke
     if (ctx.measureText(word).width > maxWidth) {
       let part = '';
       for (let i = 0; i < word.length; i++) {
         part += word[i];
         if (ctx.measureText(part + (i < word.length - 1 ? '-' : '')).width > maxWidth) {
-          // remove last char from part and push
           const pushPart = part.slice(0, -1);
-          if (pushPart) {
-            lines.push(pushPart + '-');
-          }
-          part = word[i]; // start new part with current char
+          if (pushPart) lines.push(pushPart + '-');
+          part = word[i];
           if (lines.length >= maxLines) break;
         }
       }
-      if (part && lines.length < maxLines) {
-        current = part;
-      }
+      if (part && lines.length < maxLines) current = part;
     } else {
-      // word fits on a new line
       if (lines.length < maxLines) current = word;
     }
   }
 
   if (current && lines.length < maxLines) lines.push(current);
-  // safety trim
   return lines.slice(0, maxLines);
 }
 
