@@ -1,0 +1,203 @@
+const { createCanvas /*, registerFont */ } = require('canvas');
+
+/**
+ * Generiert ein Pinterest-Pin-Canvas für DIY-Design.
+ */
+module.exports = function generateTemplate_PinterestDIY(quadCanvas, overlayText, website) {
+  const targetWidth = 1000;
+  const targetHeight = 1500;
+  const canvas = createCanvas(targetWidth, targetHeight);
+  const ctx = canvas.getContext('2d');
+
+  overlayText = overlayText ? String(overlayText).trim() : 'JETZT REINSCHAUEN';
+  website = website ? String(website).trim() : 'www.creatisto.com';
+
+  // === Hintergrundfarbe DIY (pastellig, warm) ===
+  ctx.fillStyle = '#FFF1E6'; // Heller Creme-Ton
+  ctx.fillRect(0, 0, targetWidth, targetHeight);
+
+  // === Quadrat-Bild oben einfügen (1000x1000) ===
+  if (quadCanvas) {
+    try {
+      ctx.drawImage(quadCanvas, 0, 0, targetWidth, 1000);
+    } catch (e) {
+      console.warn('quadCanvas konnte nicht gezeichnet werden:', e.message);
+    }
+  }
+
+  // === URL oben auf dem Bild mit weißem Hintergrund ===
+  const urlFontSize = 43;
+  ctx.font = `bold ${urlFontSize}px "Arial", sans-serif`;
+  const urlWidth = ctx.measureText(website).width + 30; // 15px padding links/rechts
+  const urlHeight = urlFontSize + 20; // 10px padding oben/unten
+  const urlX = targetWidth / 2 - urlWidth / 2;
+  const urlY = 100; // 100px vom oberen Rand
+
+  // Hintergrund-Box für URL
+  ctx.fillStyle = '#FFFFFF';
+  roundRect(ctx, urlX, urlY, urlWidth, urlHeight, 8);
+  ctx.fill();
+
+  // URL-Text
+  ctx.fillStyle = '#FF6F61'; // Korallen-Rot für DIY-Branding
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(website, targetWidth / 2, urlY + urlHeight / 2);
+
+  // === Unterer farbiger Bereich mit Welle ===
+  const waveHeight = 80 * 1.08;  // 8% größere Amplitude
+  const colorStartY = 1000 - 50;
+  const colorHeight = targetHeight - colorStartY;
+
+  const gradient = ctx.createLinearGradient(0, colorStartY - waveHeight, 0, targetHeight);
+  gradient.addColorStop(0, 'rgba(255,182,193,0)'); // zartes Rosa transparent
+  gradient.addColorStop(0.2, '#FFB6C1'); // Rosa
+  gradient.addColorStop(1, '#FF69B4'); // Pink
+
+  ctx.beginPath();
+  ctx.moveTo(0, colorStartY);
+  ctx.bezierCurveTo(
+    targetWidth * 0.25, colorStartY - waveHeight,
+    targetWidth * 0.75, colorStartY + waveHeight,
+    targetWidth, colorStartY
+  );
+  ctx.lineTo(targetWidth, targetHeight);
+  ctx.lineTo(0, targetHeight);
+  ctx.closePath();
+  ctx.fillStyle = gradient;
+  ctx.fill();
+
+  // === Papierstruktur auf dem farbigen Bereich ===
+  const textureCanvas = createCanvas(targetWidth, colorHeight);
+  const textureCtx = textureCanvas.getContext('2d');
+  textureCtx.fillStyle = 'rgba(255,255,255,0.05)';
+  for (let i = 0; i < 3000; i++) {
+    const x = Math.random() * targetWidth;
+    const y = Math.random() * colorHeight;
+    const size = Math.random() * 2;
+    textureCtx.fillRect(x, y, size, size);
+  }
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(0, colorStartY);
+  ctx.bezierCurveTo(
+    targetWidth * 0.25, colorStartY - waveHeight,
+    targetWidth * 0.75, colorStartY + waveHeight,
+    targetWidth, colorStartY
+  );
+  ctx.lineTo(targetWidth, targetHeight);
+  ctx.lineTo(0, targetHeight);
+  ctx.closePath();
+  ctx.clip();
+  ctx.drawImage(textureCanvas, 0, colorStartY);
+  ctx.restore();
+
+  // === Overlay-Text ===
+  const maxTextWidth = targetWidth * 0.8;
+  const maxTextBlockHeight = 200;
+  const maxLines = 3;
+  let chosenFontSize = 16;
+  let lines = [];
+  let lineHeight = 0;
+
+  for (let size = 96; size >= 16; size -= 2) {
+    ctx.font = `bold ${size}px "Arial", sans-serif`;
+    lineHeight = size * 1.25;
+    const testLines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
+    const totalTextHeight = testLines.length * lineHeight;
+    if (testLines.length <= maxLines && totalTextHeight <= maxTextBlockHeight) {
+      chosenFontSize = size;
+      lines = testLines;
+      break;
+    }
+  }
+  if (lines.length === 0) {
+    ctx.font = `bold ${chosenFontSize}px "Arial", sans-serif`;
+    lineHeight = chosenFontSize * 1.25;
+    lines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
+  }
+
+  ctx.fillStyle = '#FFFFFF';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.font = `bold ${chosenFontSize}px "Arial", sans-serif`;
+  const totalTextHeight = lines.length * lineHeight;
+  const startY = colorStartY + 40;
+
+  lines.forEach((line, index) => {
+    ctx.fillText(line, targetWidth / 2, startY + index * lineHeight);
+  });
+
+  // === Button DIY ===
+  const buttonText = 'Do it Yourself';
+  const buttonFontSize = Math.max(14, Math.floor(targetHeight * 0.035));
+  const buttonPaddingX = 40;
+  const buttonPaddingY = 20;
+
+  ctx.font = `bold ${buttonFontSize}px "Arial", sans-serif`;
+  const textWidth = ctx.measureText(buttonText).width;
+  const buttonWidth = textWidth + buttonPaddingX * 2;
+  const buttonHeight = buttonFontSize + buttonPaddingY * 2;
+  const buttonX = targetWidth / 2 - buttonWidth / 2;
+  const buttonY = startY + totalTextHeight + 40;
+
+  roundRect(ctx, buttonX, buttonY, buttonWidth, buttonHeight, 8);
+  ctx.fillStyle = '#FF7F50'; // Korallen-Orange
+  ctx.fill();
+
+  ctx.fillStyle = '#FFFFFF';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(buttonText, targetWidth / 2, buttonY + buttonHeight / 2);
+
+  return canvas;
+};
+
+// ===== Hilfsfunktionen =====
+function wrapText(ctx, text, maxWidth, maxLines) {
+  const words = String(text).split(/\s+/);
+  const lines = [];
+  let current = '';
+
+  for (let w = 0; w < words.length; w++) {
+    const word = words[w];
+    const test = current ? `${current} ${word}` : word;
+    if (ctx.measureText(test).width <= maxWidth) {
+      current = test;
+      continue;
+    }
+    if (current) {
+      lines.push(current);
+      current = '';
+      if (lines.length >= maxLines) break;
+    }
+    if (ctx.measureText(word).width > maxWidth) {
+      let part = '';
+      for (let i = 0; i < word.length; i++) {
+        part += word[i];
+        if (ctx.measureText(part + (i < word.length - 1 ? '-' : '')).width > maxWidth) {
+          const pushPart = part.slice(0, -1);
+          if (pushPart) lines.push(pushPart + '-');
+          part = word[i];
+          if (lines.length >= maxLines) break;
+        }
+      }
+      if (part && lines.length < maxLines) current = part;
+    } else {
+      if (lines.length < maxLines) current = word;
+    }
+  }
+  if (current && lines.length < maxLines) lines.push(current);
+  return lines.slice(0, maxLines);
+}
+
+function roundRect(ctx, x, y, width, height, radius) {
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.arcTo(x + width, y, x + width, y + height, radius);
+  ctx.arcTo(x + width, y + height, x, y + height, radius);
+  ctx.arcTo(x, y + height, x, y, radius);
+  ctx.arcTo(x, y, x + width, y, radius);
+  ctx.closePath();
+}
