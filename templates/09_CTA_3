@@ -1,7 +1,8 @@
 const { createCanvas } = require('canvas');
 
 /**
- * Generiert ein Pinterest-Pin-Canvas für DIY mit harmonischen Wellen über dem Text
+ * Generiert ein Pinterest-Pin-Canvas für DIY mit harmonischen Wellen
+ * Overlay-Text und Button sitzen nun unterhalb der Wellen
  */
 module.exports = function generateTemplate_PinterestDIY(quadCanvas, overlayText, website) {
   const targetWidth = 1000;
@@ -25,9 +26,9 @@ module.exports = function generateTemplate_PinterestDIY(quadCanvas, overlayText,
     }
   }
 
-  // === Unterer farbiger Bereich mit harmonischen Wellen ===
-  const baseWaveHeight = 80 * 1.08 * 0.3; // max 30% der ursprünglichen Höhe
-  const colorStartY = 1000; // Wellen ragen über Bild, wie aktuell
+  // === Harmonische Wellen über dem farbigen Bereich ===
+  const baseWaveHeight = 80 * 1.08 * 0.3 * 0.5; // amplitude 50% niedriger
+  const colorStartY = 1000;
   const colorHeight = targetHeight - colorStartY;
 
   const gradient = ctx.createLinearGradient(0, colorStartY, 0, targetHeight);
@@ -35,7 +36,7 @@ module.exports = function generateTemplate_PinterestDIY(quadCanvas, overlayText,
   gradient.addColorStop(1, '#077b8a');
 
   ctx.beginPath();
-  const waveCount = 5; // 4-6 harmonische Wellen
+  const waveCount = 5;
   ctx.moveTo(0, colorStartY);
 
   for (let x = 0; x <= targetWidth; x++) {
@@ -65,7 +66,7 @@ module.exports = function generateTemplate_PinterestDIY(quadCanvas, overlayText,
   ctx.drawImage(textureCanvas, 0, colorStartY);
   ctx.restore();
 
-  // === Overlay-Text ===
+  // === Overlay-Text unterhalb der Wellen (dynamisch) ===
   const maxTextWidth = targetWidth * 0.8;
   const maxTextBlockHeight = 200;
   const maxLines = 3;
@@ -90,18 +91,19 @@ module.exports = function generateTemplate_PinterestDIY(quadCanvas, overlayText,
     lines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
   }
 
-  ctx.fillStyle = '#FFFFFF'; // Text in weiß
+  ctx.fillStyle = '#FFFFFF'; // Text weiß
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
   ctx.font = `bold ${chosenFontSize}px "Arial", sans-serif`;
+
   const totalTextHeight = lines.length * lineHeight;
-  const startY = colorStartY - 200; // Text bleibt oberhalb Wellen
+  const startY = colorStartY + baseWaveHeight + 20; // direkt unterhalb der Wellen
 
   lines.forEach((line, index) => {
     ctx.fillText(line, targetWidth / 2, startY + index * lineHeight);
   });
 
-  // === Button DIY ===
+  // === Button DIY unterhalb des Overlay-Texts ===
   const buttonText = 'Do it Yourself';
   const buttonFontSize = Math.max(14, Math.floor(targetHeight * 0.035 * 1.1)); // 10% größer
   const buttonPaddingX = 40;
@@ -112,19 +114,19 @@ module.exports = function generateTemplate_PinterestDIY(quadCanvas, overlayText,
   const buttonWidth = textWidth + buttonPaddingX * 2;
   const buttonHeight = buttonFontSize + buttonPaddingY * 2;
   const buttonX = targetWidth / 2 - buttonWidth / 2;
-  const buttonY = startY + totalTextHeight + 40 + 50; // 50px tiefer
+  const buttonY = startY + totalTextHeight + 50; // dynamisch unter Text
 
   roundRect(ctx, buttonX, buttonY, buttonWidth, buttonHeight, 8);
-  ctx.fillStyle = '#05575b'; // Buttonfarbe dunkler
+  ctx.fillStyle = '#05575b'; // dunklerer Button
   ctx.fill();
 
-  ctx.fillStyle = '#FFFFFF'; // Button-Text in weiß
+  ctx.fillStyle = '#FFFFFF'; // Button-Text
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(buttonText, targetWidth / 2, buttonY + buttonHeight / 2);
 
   // === URL oben auf dem Bild mit weißem Hintergrund ===
-  let urlFontSize = 43 * 1.1 * 1.1; // nochmal 10% größer
+  let urlFontSize = 43 * 1.1 * 1.1; // größer
   ctx.font = `bold ${urlFontSize}px "Arial", sans-serif`;
   const urlWidth = ctx.measureText(website).width + 30;
   const urlHeight = urlFontSize + 20;
