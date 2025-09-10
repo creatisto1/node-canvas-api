@@ -546,7 +546,7 @@ app.post('/cta_2_st', async (req, res) => {
     const targetHeight = img.height;
 
     const quadCanvas = await quadrat(img);
-    const canvas = await cta_2_st(quadCanvas, overlayText, website);
+    const canvas = await cta_2_St(quadCanvas, overlayText, website);
 
 
     const filename = `img-cta_2_st-${Date.now()}.png`;
