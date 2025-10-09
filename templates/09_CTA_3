@@ -1,9 +1,5 @@
 const { createCanvas } = require('canvas');
 
-/**
- * Generiert ein Pinterest-Pin-Canvas für DIY-Bereich.
- * Rückgabe: Canvas-Objekt. Wenn du ein PNG-Buffer brauchst, rufe canvas.toBuffer('image/png').
- */
 module.exports = function generateTemplate_DIYPin(quadCanvas, overlayText, website) {
   const targetWidth = 1000;
   const targetHeight = 1500;
@@ -13,42 +9,56 @@ module.exports = function generateTemplate_DIYPin(quadCanvas, overlayText, websi
   overlayText = overlayText ? String(overlayText).trim() : '';
   website = website ? String(website).trim() : 'www.creatisto.com';
 
+  const barHeight = 80; // Höhe des Balkens oben
+
   // === Hintergrundfarbe ===
   ctx.fillStyle = '#FDF8F6';
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
-  // === Quadrat-Bild oben einfügen (1000x1000) ===
+  // === Durchgehender Balken oben ===
+  ctx.fillStyle = '#077b8a'; // Türkis
+  ctx.fillRect(0, 0, targetWidth, barHeight);
+
+  // === URL-Text im Balken ===
+  const urlFontSize = 36;
+  ctx.font = `bold ${urlFontSize}px "Arial", sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillText(website, targetWidth / 2, barHeight / 2);
+
+  // === Quadrat-Bild oben einfügen (1000x1000), nach unten verschoben um barHeight ===
   if (quadCanvas) {
     try {
-      ctx.drawImage(quadCanvas, 0, 0, targetWidth, 1000);
+      ctx.drawImage(quadCanvas, 0, barHeight, targetWidth, 1000);
     } catch (e) {
       console.warn('quadCanvas konnte nicht gezeichnet werden:', e.message);
     }
   }
 
-  // === URL oben auf dem Bild ===
-  const urlFontSize = 43 * 1.1; // 10% größer
-  ctx.font = `bold ${urlFontSize}px "Arial", sans-serif`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'top';
+  // === Harmonische Wellen / Farbverlauf unten, etwas verkürzt ===
+  const waveHeight = 40; // reduzierte Wellenhöhe
+  const colorStartY = barHeight + 1000; // unterhalb des Bildes
+  const colorHeight = targetHeight - colorStartY;
 
-  const urlPadding = 20;
-  const urlWidth = ctx.measureText(website).width + urlPadding * 2;
-  const urlHeight = urlFontSize + urlPadding * 2;
+  const gradient = ctx.createLinearGradient(0, colorStartY, 0, targetHeight);
+  gradient.addColorStop(0, '#4AC2C2');
+  gradient.addColorStop(1, '#077b8a');
 
-  const urlX = targetWidth / 2 - urlWidth / 2;
-  const urlY = 20; // Balken oben
-
-  // weißer Hintergrund für URL-Balken
-  ctx.fillStyle = '#FFFFFF';
-  roundRect(ctx, urlX, urlY, urlWidth, urlHeight, 8);
+  ctx.beginPath();
+  const waveCount = 5;
+  ctx.moveTo(0, colorStartY);
+  for (let x = 0; x <= targetWidth; x++) {
+    const y = colorStartY + Math.sin((x / targetWidth) * waveCount * Math.PI * 2) * waveHeight;
+    ctx.lineTo(x, y);
+  }
+  ctx.lineTo(targetWidth, targetHeight);
+  ctx.lineTo(0, targetHeight);
+  ctx.closePath();
+  ctx.fillStyle = gradient;
   ctx.fill();
 
-  // URL-Text dunkelgrau
-  ctx.fillStyle = '#333333';
-  ctx.fillText(website, targetWidth / 2, urlY + urlPadding / 2);
-
-  // === Overlay Text + Button unterhalb des Bildes ===
+  // === Overlay Text + Button unterhalb der Wellen ===
   const maxTextWidth = targetWidth * 0.8;
   const maxTextBlockHeight = 200;
   const maxLines = 3;
@@ -78,13 +88,13 @@ module.exports = function generateTemplate_DIYPin(quadCanvas, overlayText, websi
     }
 
     // Overlay Text
-    ctx.fillStyle = '#FFFFFF';
+    ctx.fillStyle = '#333333';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     ctx.font = `bold ${chosenFontSize}px "Arial", sans-serif`;
 
     const totalTextHeight = lines.length * lineHeight;
-    const startY = 1020; // direkt unter dem Bild
+    const startY = colorStartY + waveHeight + 20;
 
     lines.forEach((line, index) => {
       ctx.fillText(line, targetWidth / 2, startY + index * lineHeight);
@@ -101,14 +111,12 @@ module.exports = function generateTemplate_DIYPin(quadCanvas, overlayText, websi
     const buttonWidth = textWidth + buttonPaddingX * 2;
     const buttonHeight = buttonFontSize + buttonPaddingY * 2;
     const buttonX = targetWidth / 2 - buttonWidth / 2;
-    const buttonY = startY + totalTextHeight + 50; // 50px tiefer
+    const buttonY = startY + totalTextHeight + 50;
 
-    // abgerundetes Rechteck für Button
     roundRect(ctx, buttonX, buttonY, buttonWidth, buttonHeight, 8);
-    ctx.fillStyle = '#055f66'; // dunkler als #077b8a
+    ctx.fillStyle = '#055f66';
     ctx.fill();
 
-    // Button-Text in weiß
     ctx.fillStyle = '#FFFFFF';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
