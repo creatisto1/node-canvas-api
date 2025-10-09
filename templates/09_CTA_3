@@ -17,7 +17,7 @@ module.exports = function generateTemplate_DIYPin(quadCanvas, overlayText, websi
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
   // === Durchgehender Balken oben ===
-  ctx.fillStyle = beigeColor; // helles Beige
+  ctx.fillStyle = beigeColor;
   ctx.fillRect(0, 0, targetWidth, barHeight);
 
   // === URL-Text im Balken ===
@@ -37,7 +37,7 @@ module.exports = function generateTemplate_DIYPin(quadCanvas, overlayText, websi
     }
   }
 
-  // === Untere farbige Fläche (nun in Beige) ===
+  // === Untere farbige Fläche (Beige) ===
   const lowerY = barHeight + 1000; // direkt unter dem Bild
   const lowerHeight = targetHeight - lowerY;
   ctx.fillStyle = beigeColor;
@@ -79,7 +79,7 @@ module.exports = function generateTemplate_DIYPin(quadCanvas, overlayText, websi
     ctx.font = `bold ${chosenFontSize}px "Arial", sans-serif`;
 
     const totalTextHeight = lines.length * lineHeight;
-    const startY = lowerY + 20; // leichtes Padding vom unteren Bereich
+    const startY = lowerY + 20 + 15; // vorheriges Padding + 15px extra Abstand
 
     lines.forEach((line, index) => {
       ctx.fillText(line, targetWidth / 2, startY + index * lineHeight);
