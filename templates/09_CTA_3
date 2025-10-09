@@ -52,25 +52,20 @@ module.exports = function generateTemplate_DIYPin(quadCanvas, overlayText, websi
     let lines = [];
     let lineHeight = 0;
 
-    // Button-Konstanten
+    // Maximale Höhe für Overlaytext + Button
     const buttonFontSize = Math.max(14, Math.floor(targetHeight * 0.035 * 1.1));
-    const buttonPaddingX = 40;
     const buttonPaddingY = 20;
     const buttonHeight = buttonFontSize + buttonPaddingY * 2;
-    const buttonText = 'JETZT ENTDECKEN';
-    const buttonGap = 10; // Abstand zwischen Text und Button
+    const maxOverlayHeight = lowerHeight - lowerPadding - buttonHeight - 20; // 20 px Puffer oberhalb Button
 
-    // Maximale Höhe für Overlaytext + Button
-    const maxOverlayHeight = lowerHeight - lowerPadding - buttonHeight - buttonGap;
-
-    // Iterative Anpassung der Schriftgröße, nur verkleinern
+    // Iterative Anpassung der Schriftgröße
     while (chosenFontSize >= 16) {
       ctx.font = `bold ${chosenFontSize}px "Arial", sans-serif`;
       lineHeight = chosenFontSize * 1.25;
       lines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
       const totalTextHeight = lines.length * lineHeight;
       if (totalTextHeight <= maxOverlayHeight) break;
-      chosenFontSize -= 2; // Font kleiner machen
+      chosenFontSize -= 2; // verkleinern, bis es passt
     }
 
     // Overlay Text zeichnen
@@ -86,10 +81,13 @@ module.exports = function generateTemplate_DIYPin(quadCanvas, overlayText, websi
       ctx.fillText(line, targetWidth / 2, startY + index * lineHeight);
     });
 
-    // Button positionieren: 10px Abstand über Overlaytext + 10px nach oben rücken
-    let buttonY = startY + totalTextHeight + buttonGap - 10;
-    const buttonMaxY = lowerY + lowerHeight - lowerPadding - buttonHeight;
-    if (buttonY > buttonMaxY) buttonY = buttonMaxY; // nie über unteren Rand hinaus
+    // Button dynamisch positionieren
+    let buttonY = startY + totalTextHeight + 20; // Start: 20 px Abstand vom Text
+    const buttonMaxY = lowerY + lowerHeight - lowerPadding - buttonHeight; // maximaler Y-Wert
+    if (buttonY > buttonMaxY) buttonY = buttonMaxY; // Begrenzung nach unten
+
+    const buttonText = 'JETZT ENTDECKEN';
+    const buttonPaddingX = 40;
 
     ctx.font = `bold ${buttonFontSize}px "Arial", sans-serif`;
     const textWidth = ctx.measureText(buttonText).width;
