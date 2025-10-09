@@ -96,7 +96,7 @@ module.exports = function generateTemplate_DIYPin(quadCanvas, overlayText, websi
     const buttonWidth = textWidth + buttonPaddingX * 2;
     const buttonHeight = buttonFontSize + buttonPaddingY * 2;
     const buttonX = targetWidth / 2 - buttonWidth / 2;
-    const buttonY = startY + totalTextHeight + 50 - 10; // 10px nach oben verschoben
+    const buttonY = startY + totalTextHeight + 50 - 10 - 5; // Button jetzt fixiert 15px höher
 
     roundRect(ctx, buttonX, buttonY, buttonWidth, buttonHeight, 8);
     ctx.fillStyle = '#C0A880'; // dunkleres Beige für den Button
