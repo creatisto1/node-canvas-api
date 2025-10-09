@@ -9,25 +9,25 @@ module.exports = function generateTemplate_DIYPin(quadCanvas, overlayText, websi
   overlayText = overlayText ? String(overlayText).trim() : '';
   website = website ? String(website).trim() : 'www.creatisto.com';
 
-  const barHeight = 80; // Höhe des Balkens oben
+  const barHeight = 100; // Höhe des Balkens oben, etwas größer für mehr Sichtbarkeit
 
   // === Hintergrundfarbe ===
   ctx.fillStyle = '#FDF8F6';
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
   // === Durchgehender Balken oben ===
-  ctx.fillStyle = '#077b8a'; // Türkis
+  ctx.fillStyle = '#F5F0E6'; // helles Beige
   ctx.fillRect(0, 0, targetWidth, barHeight);
 
   // === URL-Text im Balken ===
-  const urlFontSize = 36;
+  const urlFontSize = 50; // größer als vorher
   ctx.font = `bold ${urlFontSize}px "Arial", sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#FFFFFF';
+  ctx.fillStyle = '#333333'; // dunkle Schrift für Kontrast
   ctx.fillText(website, targetWidth / 2, barHeight / 2);
 
-  // === Quadrat-Bild oben einfügen (1000x1000), nach unten verschoben um barHeight ===
+  // === Quadrat-Bild oben einfügen (1000x1000), direkt unter Balken ===
   if (quadCanvas) {
     try {
       ctx.drawImage(quadCanvas, 0, barHeight, targetWidth, 1000);
@@ -36,29 +36,7 @@ module.exports = function generateTemplate_DIYPin(quadCanvas, overlayText, websi
     }
   }
 
-  // === Harmonische Wellen / Farbverlauf unten, etwas verkürzt ===
-  const waveHeight = 40; // reduzierte Wellenhöhe
-  const colorStartY = barHeight + 1000; // unterhalb des Bildes
-  const colorHeight = targetHeight - colorStartY;
-
-  const gradient = ctx.createLinearGradient(0, colorStartY, 0, targetHeight);
-  gradient.addColorStop(0, '#4AC2C2');
-  gradient.addColorStop(1, '#077b8a');
-
-  ctx.beginPath();
-  const waveCount = 5;
-  ctx.moveTo(0, colorStartY);
-  for (let x = 0; x <= targetWidth; x++) {
-    const y = colorStartY + Math.sin((x / targetWidth) * waveCount * Math.PI * 2) * waveHeight;
-    ctx.lineTo(x, y);
-  }
-  ctx.lineTo(targetWidth, targetHeight);
-  ctx.lineTo(0, targetHeight);
-  ctx.closePath();
-  ctx.fillStyle = gradient;
-  ctx.fill();
-
-  // === Overlay Text + Button unterhalb der Wellen ===
+  // === Overlay Text + Button unterhalb des Bildes ===
   const maxTextWidth = targetWidth * 0.8;
   const maxTextBlockHeight = 200;
   const maxLines = 3;
@@ -94,7 +72,7 @@ module.exports = function generateTemplate_DIYPin(quadCanvas, overlayText, websi
     ctx.font = `bold ${chosenFontSize}px "Arial", sans-serif`;
 
     const totalTextHeight = lines.length * lineHeight;
-    const startY = colorStartY + waveHeight + 20;
+    const startY = barHeight + 1000 + 20; // direkt unter dem Bild
 
     lines.forEach((line, index) => {
       ctx.fillText(line, targetWidth / 2, startY + index * lineHeight);
@@ -114,7 +92,7 @@ module.exports = function generateTemplate_DIYPin(quadCanvas, overlayText, websi
     const buttonY = startY + totalTextHeight + 50;
 
     roundRect(ctx, buttonX, buttonY, buttonWidth, buttonHeight, 8);
-    ctx.fillStyle = '#055f66';
+    ctx.fillStyle = '#C0A880'; // dunkleres Beige für den Button
     ctx.fill();
 
     ctx.fillStyle = '#FFFFFF';
