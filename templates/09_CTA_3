@@ -10,7 +10,7 @@ module.exports = function generateTemplate_DIYPin(quadCanvas, overlayText, websi
   const canvas = createCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext('2d');
 
-  overlayText = overlayText ? String(overlayText).trim() : 'JETZT REINSCHAUEN';
+  overlayText = overlayText ? String(overlayText).trim() : '';
   website = website ? String(website).trim() : 'www.creatisto.com';
 
   // === Hintergrundfarbe ===
@@ -37,9 +37,9 @@ module.exports = function generateTemplate_DIYPin(quadCanvas, overlayText, websi
   const urlHeight = urlFontSize + urlPadding * 2;
 
   const urlX = targetWidth / 2 - urlWidth / 2;
-  const urlY = 100;
+  const urlY = 20; // Balken oben
 
-  // weißer Hintergrund für URL
+  // weißer Hintergrund für URL-Balken
   ctx.fillStyle = '#FFFFFF';
   roundRect(ctx, urlX, urlY, urlWidth, urlHeight, 8);
   ctx.fill();
@@ -48,29 +48,7 @@ module.exports = function generateTemplate_DIYPin(quadCanvas, overlayText, websi
   ctx.fillStyle = '#333333';
   ctx.fillText(website, targetWidth / 2, urlY + urlPadding / 2);
 
-  // === Harmonische Wellen über dem farbigen Bereich ===
-  const waveHeight = 80 * 1.08 * 0.3 * 0.5; // 50% reduzierte Amplitude
-  const colorStartY = 1000;
-  const colorHeight = targetHeight - colorStartY;
-
-  const gradient = ctx.createLinearGradient(0, colorStartY, 0, targetHeight);
-  gradient.addColorStop(0, '#4AC2C2'); // helleres Grün angepasst
-  gradient.addColorStop(1, '#077b8a'); // dunkleres Türkis
-
-  ctx.beginPath();
-  const waveCount = 5;
-  ctx.moveTo(0, colorStartY);
-  for (let x = 0; x <= targetWidth; x++) {
-    const y = colorStartY + Math.sin((x / targetWidth) * waveCount * Math.PI * 2) * waveHeight;
-    ctx.lineTo(x, y);
-  }
-  ctx.lineTo(targetWidth, targetHeight);
-  ctx.lineTo(0, targetHeight);
-  ctx.closePath();
-  ctx.fillStyle = gradient;
-  ctx.fill();
-
-  // === Overlay Text + Button unterhalb der Wellen ===
+  // === Overlay Text + Button unterhalb des Bildes ===
   const maxTextWidth = targetWidth * 0.8;
   const maxTextBlockHeight = 200;
   const maxLines = 3;
@@ -79,61 +57,63 @@ module.exports = function generateTemplate_DIYPin(quadCanvas, overlayText, websi
   let lines = [];
   let lineHeight = 0;
 
-  for (let size = 96; size >= 16; size -= 2) {
-    ctx.font = `bold ${size}px "Arial", sans-serif`;
-    lineHeight = size * 1.25;
-    const testLines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
-    const totalTextHeight = testLines.length * lineHeight;
-    if (testLines.length <= maxLines && totalTextHeight <= maxTextBlockHeight) {
-      chosenFontSize = size * 1.1; // 10% größer
-      lines = testLines;
-      break;
+  if (overlayText) {
+    for (let size = 96; size >= 16; size -= 2) {
+      ctx.font = `bold ${size}px "Arial", sans-serif`;
+      lineHeight = size * 1.25;
+      const testLines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
+      const totalTextHeight = testLines.length * lineHeight;
+      if (testLines.length <= maxLines && totalTextHeight <= maxTextBlockHeight) {
+        chosenFontSize = size * 1.1; // 10% größer
+        lines = testLines;
+        break;
+      }
     }
-  }
 
-  if (lines.length === 0) {
-    chosenFontSize = 16;
+    if (lines.length === 0) {
+      chosenFontSize = 16;
+      ctx.font = `bold ${chosenFontSize}px "Arial", sans-serif`;
+      lineHeight = chosenFontSize * 1.25;
+      lines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
+    }
+
+    // Overlay Text
+    ctx.fillStyle = '#FFFFFF';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
     ctx.font = `bold ${chosenFontSize}px "Arial", sans-serif`;
-    lineHeight = chosenFontSize * 1.25;
-    lines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
+
+    const totalTextHeight = lines.length * lineHeight;
+    const startY = 1020; // direkt unter dem Bild
+
+    lines.forEach((line, index) => {
+      ctx.fillText(line, targetWidth / 2, startY + index * lineHeight);
+    });
+
+    // Button "JETZT ENTDECKEN"
+    const buttonText = 'JETZT ENTDECKEN';
+    const buttonFontSize = Math.max(14, Math.floor(targetHeight * 0.035 * 1.1)); // 10% größer
+    const buttonPaddingX = 40;
+    const buttonPaddingY = 20;
+
+    ctx.font = `bold ${buttonFontSize}px "Arial", sans-serif`;
+    const textWidth = ctx.measureText(buttonText).width;
+    const buttonWidth = textWidth + buttonPaddingX * 2;
+    const buttonHeight = buttonFontSize + buttonPaddingY * 2;
+    const buttonX = targetWidth / 2 - buttonWidth / 2;
+    const buttonY = startY + totalTextHeight + 50; // 50px tiefer
+
+    // abgerundetes Rechteck für Button
+    roundRect(ctx, buttonX, buttonY, buttonWidth, buttonHeight, 8);
+    ctx.fillStyle = '#055f66'; // dunkler als #077b8a
+    ctx.fill();
+
+    // Button-Text in weiß
+    ctx.fillStyle = '#FFFFFF';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(buttonText, targetWidth / 2, buttonY + buttonHeight / 2);
   }
-
-  // Overlay Text
-  ctx.fillStyle = '#FFFFFF';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'top';
-  ctx.font = `bold ${chosenFontSize}px "Arial", sans-serif`;
-
-  const totalTextHeight = lines.length * lineHeight;
-  const startY = colorStartY + waveHeight + 20; // unterhalb der Wellen
-
-  lines.forEach((line, index) => {
-    ctx.fillText(line, targetWidth / 2, startY + index * lineHeight);
-  });
-
-  // Button "Do it Yourself"
-  const buttonText = 'Do it Yourself';
-  const buttonFontSize = Math.max(14, Math.floor(targetHeight * 0.035 * 1.1)); // 10% größer
-  const buttonPaddingX = 40;
-  const buttonPaddingY = 20;
-
-  ctx.font = `bold ${buttonFontSize}px "Arial", sans-serif`;
-  const textWidth = ctx.measureText(buttonText).width;
-  const buttonWidth = textWidth + buttonPaddingX * 2;
-  const buttonHeight = buttonFontSize + buttonPaddingY * 2;
-  const buttonX = targetWidth / 2 - buttonWidth / 2;
-  const buttonY = startY + totalTextHeight + 50; // 50px tiefer
-
-  // abgerundetes Rechteck für Button
-  roundRect(ctx, buttonX, buttonY, buttonWidth, buttonHeight, 8);
-  ctx.fillStyle = '#055f66'; // dunkler als #077b8a
-  ctx.fill();
-
-  // Button-Text in weiß
-  ctx.fillStyle = '#FFFFFF';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(buttonText, targetWidth / 2, buttonY + buttonHeight / 2);
 
   return canvas;
 };
