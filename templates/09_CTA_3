@@ -9,26 +9,27 @@ module.exports = function generateTemplate_DIYPin(quadCanvas, overlayText, websi
   overlayText = overlayText ? String(overlayText).trim() : '';
   website = website ? String(website).trim() : 'www.creatisto.com';
 
-  const barHeight = 100; // Höhe des Balkens oben
+  const barHeight = 100; // Höhe des oberen Balkens
   const beigeColor = '#F5F0E6'; // helles Beige
+  const lowerPadding = 30; // ästhetischer Abstand vom unteren Rand
 
   // === Hintergrundfarbe ===
   ctx.fillStyle = '#FDF8F6';
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
-  // === Durchgehender Balken oben ===
+  // === Oberer Balken ===
   ctx.fillStyle = beigeColor;
   ctx.fillRect(0, 0, targetWidth, barHeight);
 
-  // === URL-Text im Balken ===
-  const urlFontSize = 50; // größere Schrift
+  // === URL im Balken ===
+  const urlFontSize = 50;
   ctx.font = `bold ${urlFontSize}px "Arial", sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#333333'; // dunkle Schrift für Kontrast
+  ctx.fillStyle = '#333333';
   ctx.fillText(website, targetWidth / 2, barHeight / 2);
 
-  // === Quadrat-Bild oben einfügen (1000x1000), direkt unter Balken ===
+  // === Quadrat-Bild direkt unter Balken ===
   if (quadCanvas) {
     try {
       ctx.drawImage(quadCanvas, 0, barHeight, targetWidth, 1000);
@@ -37,69 +38,64 @@ module.exports = function generateTemplate_DIYPin(quadCanvas, overlayText, websi
     }
   }
 
-  // === Untere farbige Fläche (Beige) ===
-  const lowerY = barHeight + 1000; // direkt unter dem Bild
+  // === Untere beige Fläche ===
+  const lowerY = barHeight + 1000;
   const lowerHeight = targetHeight - lowerY;
   ctx.fillStyle = beigeColor;
   ctx.fillRect(0, lowerY, targetWidth, lowerHeight);
 
   // === Overlay Text + Button ===
-  const maxTextWidth = targetWidth * 0.8;
-  const maxTextBlockHeight = 200;
-  const maxLines = 3;
-
-  let chosenFontSize = 16;
-  let lines = [];
-  let lineHeight = 0;
-
   if (overlayText) {
-    for (let size = 96; size >= 16; size -= 2) {
-      ctx.font = `bold ${size}px "Arial", sans-serif`;
-      lineHeight = size * 1.25;
-      const testLines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
-      const totalTextHeight = testLines.length * lineHeight;
-      if (testLines.length <= maxLines && totalTextHeight <= maxTextBlockHeight) {
-        chosenFontSize = size * 1.1; // 10% größer
-        lines = testLines;
-        break;
-      }
-    }
+    const maxTextWidth = targetWidth * 0.8;
+    const maxLines = 3;
+    let chosenFontSize = 96; // Startfontgröße für Overlaytext
+    let lines = [];
+    let lineHeight = 0;
 
-    if (lines.length === 0) {
-      chosenFontSize = 16;
+    // Maximale Höhe für Overlaytext + Button
+    const buttonFontSize = Math.max(14, Math.floor(targetHeight * 0.035 * 1.1));
+    const buttonPaddingY = 20;
+    const buttonHeight = buttonFontSize + buttonPaddingY * 2;
+    const maxOverlayHeight = lowerHeight - lowerPadding - buttonHeight - 20; // 20 px Puffer oberhalb Button
+
+    // Iterative Anpassung der Schriftgröße
+    while (chosenFontSize >= 16) {
       ctx.font = `bold ${chosenFontSize}px "Arial", sans-serif`;
       lineHeight = chosenFontSize * 1.25;
       lines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
+      const totalTextHeight = lines.length * lineHeight;
+      if (totalTextHeight <= maxOverlayHeight) break;
+      chosenFontSize -= 2; // verkleinern, bis es passt
     }
 
-    // Overlay Text
+    // Overlay Text zeichnen
     ctx.fillStyle = '#333333';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     ctx.font = `bold ${chosenFontSize}px "Arial", sans-serif`;
 
     const totalTextHeight = lines.length * lineHeight;
-    const startY = lowerY + 20 + 15; // vorheriges Padding + 15px extra Abstand
+    const startY = lowerY + 20 + 15; // Padding vom oberen Rand beige Fläche
 
     lines.forEach((line, index) => {
       ctx.fillText(line, targetWidth / 2, startY + index * lineHeight);
     });
 
-    // Button "JETZT ENTDECKEN"
+    // Button dynamisch positionieren
+    let buttonY = startY + totalTextHeight + 20; // Start: 20 px Abstand vom Text
+    const buttonMaxY = lowerY + lowerHeight - lowerPadding - buttonHeight; // maximaler Y-Wert
+    if (buttonY > buttonMaxY) buttonY = buttonMaxY; // Begrenzung nach unten
+
     const buttonText = 'JETZT ENTDECKEN';
-    const buttonFontSize = Math.max(14, Math.floor(targetHeight * 0.035 * 1.1)); // 10% größer
     const buttonPaddingX = 40;
-    const buttonPaddingY = 20;
 
     ctx.font = `bold ${buttonFontSize}px "Arial", sans-serif`;
     const textWidth = ctx.measureText(buttonText).width;
     const buttonWidth = textWidth + buttonPaddingX * 2;
-    const buttonHeight = buttonFontSize + buttonPaddingY * 2;
     const buttonX = targetWidth / 2 - buttonWidth / 2;
-    const buttonY = startY + totalTextHeight + 50;
 
     roundRect(ctx, buttonX, buttonY, buttonWidth, buttonHeight, 8);
-    ctx.fillStyle = '#C0A880'; // dunkleres Beige für den Button
+    ctx.fillStyle = '#C0A880';
     ctx.fill();
 
     ctx.fillStyle = '#FFFFFF';
