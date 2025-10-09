@@ -85,21 +85,26 @@ module.exports = function generateTemplate_DIYPin(quadCanvas, overlayText, websi
       ctx.fillText(line, targetWidth / 2, startY + index * lineHeight);
     });
 
-    // Button "JETZT ENTDECKEN"
+    // === Button "JETZT ENTDECKEN" 8% kleiner, obere Kante fixiert ===
+    const scale = 0.92; // 8% kleiner
     const buttonText = 'JETZT ENTDECKEN';
-    const buttonFontSize = Math.max(14, Math.floor(targetHeight * 0.035 * 1.1)); // 10% größer
-    const buttonPaddingX = 40;
-    const buttonPaddingY = 20;
+    let buttonFontSize = Math.max(14, Math.floor(targetHeight * 0.035 * 1.1));
+    buttonFontSize = Math.floor(buttonFontSize * scale);
+
+    const buttonPaddingX = 40 * scale;
+    const buttonPaddingY = 20 * scale;
 
     ctx.font = `bold ${buttonFontSize}px "Arial", sans-serif`;
     const textWidth = ctx.measureText(buttonText).width;
     const buttonWidth = textWidth + buttonPaddingX * 2;
     const buttonHeight = buttonFontSize + buttonPaddingY * 2;
+
+    // Button-Position bleibt fixiert: obere Kante unverändert
     const buttonX = targetWidth / 2 - buttonWidth / 2;
-    const buttonY = startY + totalTextHeight + 50 - 10 - 5; // Button jetzt fixiert 15px höher
+    const buttonY = startY + totalTextHeight + 50 - 10 - 5; // unverändert
 
     roundRect(ctx, buttonX, buttonY, buttonWidth, buttonHeight, 8);
-    ctx.fillStyle = '#C0A880'; // dunkleres Beige für den Button
+    ctx.fillStyle = '#C0A880';
     ctx.fill();
 
     ctx.fillStyle = '#FFFFFF';
