@@ -9,18 +9,19 @@ module.exports = function generateTemplate_DIYPin(quadCanvas, overlayText, websi
   overlayText = overlayText ? String(overlayText).trim() : '';
   website = website ? String(website).trim() : 'www.creatisto.com';
 
-  const barHeight = 100; // Höhe des Balkens oben, etwas größer für mehr Sichtbarkeit
+  const barHeight = 100; // Höhe des Balkens oben
+  const beigeColor = '#F5F0E6'; // helles Beige
 
   // === Hintergrundfarbe ===
   ctx.fillStyle = '#FDF8F6';
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
   // === Durchgehender Balken oben ===
-  ctx.fillStyle = '#F5F0E6'; // helles Beige
+  ctx.fillStyle = beigeColor; // helles Beige
   ctx.fillRect(0, 0, targetWidth, barHeight);
 
   // === URL-Text im Balken ===
-  const urlFontSize = 50; // größer als vorher
+  const urlFontSize = 50; // größere Schrift
   ctx.font = `bold ${urlFontSize}px "Arial", sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -36,7 +37,13 @@ module.exports = function generateTemplate_DIYPin(quadCanvas, overlayText, websi
     }
   }
 
-  // === Overlay Text + Button unterhalb des Bildes ===
+  // === Untere farbige Fläche (nun in Beige) ===
+  const lowerY = barHeight + 1000; // direkt unter dem Bild
+  const lowerHeight = targetHeight - lowerY;
+  ctx.fillStyle = beigeColor;
+  ctx.fillRect(0, lowerY, targetWidth, lowerHeight);
+
+  // === Overlay Text + Button ===
   const maxTextWidth = targetWidth * 0.8;
   const maxTextBlockHeight = 200;
   const maxLines = 3;
@@ -72,7 +79,7 @@ module.exports = function generateTemplate_DIYPin(quadCanvas, overlayText, websi
     ctx.font = `bold ${chosenFontSize}px "Arial", sans-serif`;
 
     const totalTextHeight = lines.length * lineHeight;
-    const startY = barHeight + 1000 + 20; // direkt unter dem Bild
+    const startY = lowerY + 20; // leichtes Padding vom unteren Bereich
 
     lines.forEach((line, index) => {
       ctx.fillText(line, targetWidth / 2, startY + index * lineHeight);
