@@ -1,6 +1,6 @@
 const { createCanvas } = require('canvas');
 
-module.exports = async function resizeToSquare(img) {
+module.exports = async function quadratZoom(img) {
   const targetSize = 1000;
   const zoomFactor = 1.15; // +15% Zoom
 
@@ -10,12 +10,13 @@ module.exports = async function resizeToSquare(img) {
 
   let drawWidth, drawHeight;
 
+  // Größe basierend auf Verhältnis berechnen
   if (imgRatio > 1) {
-    // Bild ist breiter → Höhe = 1000
+    // Bild breiter als hoch → Höhe = targetSize
     drawHeight = targetSize;
     drawWidth = imgRatio * targetSize;
   } else {
-    // Bild ist höher oder quadratisch → Breite = 1000
+    // Bild höher oder quadratisch → Breite = targetSize
     drawWidth = targetSize;
     drawHeight = targetSize / imgRatio;
   }
@@ -24,15 +25,15 @@ module.exports = async function resizeToSquare(img) {
   drawWidth *= zoomFactor;
   drawHeight *= zoomFactor;
 
-  // Canvas auf Zielgröße
+  // Canvas erstellen
   const canvas = createCanvas(targetSize, targetSize);
   const ctx = canvas.getContext('2d');
 
-  // Hintergrund (weiß)
+  // Hintergrund weiß
   ctx.fillStyle = 'white';
   ctx.fillRect(0, 0, targetSize, targetSize);
 
-  // Neu zentrieren (weil das Bild größer ist als die Fläche)
+  // Bild zentrieren
   const dx = (targetSize - drawWidth) / 2;
   const dy = (targetSize - drawHeight) / 2;
 
