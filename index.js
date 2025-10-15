@@ -19,6 +19,7 @@ const cta_2 = require('./templates/07_CTA_2');
 const cta_2_inverted = require('./templates/07_CTA_2_inverted');
 const cta_2_St = require('./templates/08_CTA_2_St');
 const cta_3 = require('./templates/09_CTA_3');
+const quadratZoom = require('./templatesCrop/07_quadratZoom');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -604,6 +605,44 @@ app.post('/cta_3', async (req, res) => {
     console.error('Fehler:', error);
     res.status(500).send('Fehler beim Verarbeiten des Bildes');
   }
+// Neue Route: quadratZoom Template
+app.post('/quadratZoom', async (req, res) => {
+  const imageUrl = req.body.url;
+  const website = req.body.website || null;
+  let overlayText = req.body.overlay || 'Hello, World!';
+  overlayText = overlayText.toUpperCase();
+
+  console.log('Empfangene Website:', website);
+
+  if (!imageUrl) {
+    return res.status(400).send('Missing "url" in request body');
+  }
+
+  try {
+    const img = await loadImage(imageUrl);
+    const targetWidth = img.width;
+    const targetHeight = img.height;
+
+    const quadCanvas = await quadrat(img);
+    const canvas = await cta_3(quadCanvas, overlayText, website);
+
+
+    const filename = `img-quadratZoom-${Date.now()}.png`;
+    const savePath = path.join(publicDir, filename);
+    const out = fs.createWriteStream(savePath);
+    const stream = canvas.createPNGStream();
+
+    stream.pipe(out);
+    out.on('finish', () => {
+      const imgUrl = `${req.protocol}://${req.get('host')}/public/${filename}`;
+      res.json({ imgUrl });
+    });
+
+     } catch (error) {
+    console.error('Fehler:', error);
+    res.status(500).send('Fehler beim Verarbeiten des Bildes');
+  }
+  
 });
 app.listen(port, () => {
   console.log(`✅ Server läuft auf http://localhost:${port}`);
