@@ -93,7 +93,7 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, websit
 
   // === URL unter dem Button ===
   const urlText = website || "www.creatisto.com";
-  ctx.font = 'bold 43px "Averta"';
+  ctx.font = `bold ${urlFontSize}px "Averta"`;
   ctx.fillStyle = '#4F4F4F';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
