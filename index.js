@@ -610,9 +610,7 @@ app.post('/cta_3', async (req, res) => {
 // Neue Route: quadratZoom Template
 app.post('/quadratZoom', async (req, res) => {
   const imageUrl = req.body.url;
-  const website = req.body.website || null;
-  let overlayText = req.body.overlay || 'Hello, World!';
-  overlayText = overlayText.toUpperCase();
+  const website = req.body.website || null; // aktuell ungenutzt, aber belassen falls später gebraucht
 
   console.log('Empfangene Website:', website);
 
@@ -622,12 +620,7 @@ app.post('/quadratZoom', async (req, res) => {
 
   try {
     const img = await loadImage(imageUrl);
-    const targetWidth = img.width;
-    const targetHeight = img.height;
-
-    const quadCanvas = await quadrat(img);
-    const canvas = await cta_3(quadCanvas, overlayText, website);
-
+    const canvas = await quadratZoom(img);  // nur img übergeben
 
     const filename = `img-quadratZoom-${Date.now()}.png`;
     const savePath = path.join(publicDir, filename);
@@ -640,7 +633,7 @@ app.post('/quadratZoom', async (req, res) => {
       res.json({ imgUrl });
     });
 
-     } catch (error) {
+  } catch (error) {
     console.error('Fehler:', error);
     res.status(500).send('Fehler beim Verarbeiten des Bildes');
   }
