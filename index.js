@@ -605,6 +605,8 @@ app.post('/cta_3', async (req, res) => {
     console.error('Fehler:', error);
     res.status(500).send('Fehler beim Verarbeiten des Bildes');
   }
+});
+
 // Neue Route: quadratZoom Template
 app.post('/quadratZoom', async (req, res) => {
   const imageUrl = req.body.url;
@@ -642,8 +644,8 @@ app.post('/quadratZoom', async (req, res) => {
     console.error('Fehler:', error);
     res.status(500).send('Fehler beim Verarbeiten des Bildes');
   }
-  
 });
+
 app.listen(port, () => {
   console.log(`✅ Server läuft auf http://localhost:${port}`);
 });
