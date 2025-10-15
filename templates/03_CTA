@@ -1,6 +1,9 @@
 const { createCanvas } = require('canvas');
 
-module.exports = async function generateTemplate_03_CTA(img, overlayText, targetWidth, targetHeight, website) {
+module.exports = async function generateTemplate_03_CTA(img, overlayText, website) {
+  const targetWidth = 1000;
+  const targetHeight = 1500;
+
   const canvas = createCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext('2d');
 
@@ -8,7 +11,7 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, target
   ctx.fillStyle = '#FDF8F6';
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
-  // === Bild (oben) ===
+  // === Bild (oben, 60% des Canvas) ===
   const topImageHeight = targetHeight * 0.6;
   const scale = Math.max(targetWidth / img.width, topImageHeight / img.height);
   const sWidth = targetWidth / scale;
@@ -36,7 +39,6 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, target
     const testLines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
     const totalTextHeight = testLines.length * lineHeight;
 
-    // ✅ Kein Entfernen von echten Bindestrichen!
     const joined = testLines.join('').replace(/\s/g, '');
     const original = overlayText.replace(/\s/g, '');
 
@@ -118,9 +120,7 @@ function wrapText(ctx, text, maxWidth, maxLines) {
     } else {
       if (ctx.measureText(word).width > maxWidth) {
         const brokenParts = breakLongWord(ctx, word, maxWidth);
-        if (currentLine) {
-          lines.push(currentLine);
-        }
+        if (currentLine) lines.push(currentLine);
         for (let part of brokenParts) {
           if (lines.length >= maxLines) return lines;
           lines.push(part);
@@ -146,9 +146,7 @@ function breakLongWord(ctx, word, maxWidth) {
   for (let char of word) {
     const test = current + char;
     if (ctx.measureText(test).width > maxWidth) {
-      if (current) {
-        parts.push(current + '-');
-      }
+      if (current) parts.push(current + '-');
       current = char;
     } else {
       current += char;
