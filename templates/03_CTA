@@ -7,14 +7,14 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, websit
   const ctx = canvas.getContext('2d');
 
   overlayText = overlayText ? String(overlayText).trim() : '';
-  website = website ? String(website).trim() : 'www.creatisto.com';
+  website = website ? String(website).trim() : 'www.creatisto.com'; // default URL
 
   // === Hintergrundfarbe ===
   ctx.fillStyle = '#FDF8F6';
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
   // === Bild proportional skalieren (oben) ===
-  const topImageHeight = 1000; // genau wie beim DIYPin-Template
+  const topImageHeight = 1000; // wie beim DIYPin-Template
   let drawWidth = targetWidth;
   let drawHeight = topImageHeight;
   let dx = 0;
@@ -103,13 +103,13 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, websit
   ctx.fillText(buttonText, targetWidth / 2, buttonY + buttonHeight / 2);
 
   // === URL unter dem Button ===
+  const urlText = website; // ✅ URL korrekt aus Parameter
   ctx.font = 'bold 43px "Averta"';
   ctx.fillStyle = '#4F4F4F';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
-
   const urlY = buttonY + buttonHeight + 12;
-  ctx.fillText(website, targetWidth / 2, urlY);
+  ctx.fillText(urlText, targetWidth / 2, urlY);
 
   return canvas;
 };
