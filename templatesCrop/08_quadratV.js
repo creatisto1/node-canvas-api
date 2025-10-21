@@ -35,7 +35,7 @@ module.exports = async function resizeToSquare(img) {
   // === VIGNETTEN-EFFEKT ===
   // Radialer Verlauf: Mitte durchsichtig → Ränder leicht dunkel
   const vignette = ctx.createRadialGradient(
-    targetSize / 2, targetSize / 2, targetSize * 0.3, // innerer Kreis
+    targetSize / 2, targetSize / 2, targetSize * 0.4, // innerer Kreis
     targetSize / 2, targetSize / 2, targetSize * 0.7  // äußerer Kreis
   );
   vignette.addColorStop(0, 'rgba(0, 0, 0, 0)');       // Mitte transparent
