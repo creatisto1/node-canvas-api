@@ -7,21 +7,22 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, websit
   const ctx = canvas.getContext('2d');
 
   overlayText = overlayText ? String(overlayText).trim() : '';
-  website = website ? String(website).trim() : 'www.creatisto.com'; // default URL
+  website = website ? String(website).trim() : 'www.creatisto.com';
 
   // === Hintergrundfarbe ===
   ctx.fillStyle = '#FDF8F6';
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
-  // === Bild proportional skalieren (oben) ===
-  const topImageHeight = 1000; // wie beim DIYPin-Template
+  // === Bild oben ===
+  const topImageHeight = 1000;
   let drawWidth = targetWidth;
   let drawHeight = topImageHeight;
   let dx = 0;
   let dy = 0;
 
-  // Quadratische Bilder oder andere
   const imgRatio = img.width / img.height;
+
+  // Bild so skalieren, dass es den oberen Bereich füllt
   if (img.width !== img.height) {
     if (imgRatio > targetWidth / topImageHeight) {
       drawWidth = targetWidth;
@@ -32,14 +33,20 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, websit
       drawWidth = imgRatio * topImageHeight;
       dx = (targetWidth - drawWidth) / 2;
     }
+  } else {
+    // quadratisches Bild → exakt 1000x1000
+    drawWidth = topImageHeight;
+    drawHeight = topImageHeight;
+    dx = 0;
+    dy = 0;
   }
 
   ctx.drawImage(img, dx, dy, drawWidth, drawHeight);
 
-  // === Textblock-Parameter ===
+  // === Textblock ===
   const padding = 40;
   const maxTextWidth = targetWidth * 0.8;
-  const maxTextBlockHeight = targetHeight - topImageHeight - 200; // Platz für Text + Button
+  const maxTextBlockHeight = targetHeight - topImageHeight - 200;
   const maxLines = 3;
 
   let chosenFontSize = 16;
@@ -68,7 +75,6 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, websit
     lines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
   }
 
-  // === Overlay Text ===
   ctx.fillStyle = '#4F4F4F';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
@@ -103,19 +109,16 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, websit
   ctx.fillText(buttonText, targetWidth / 2, buttonY + buttonHeight / 2);
 
   // === URL unter dem Button ===
-  const urlText = website; // ✅ URL korrekt aus Parameter
   ctx.font = 'bold 43px "Averta"';
   ctx.fillStyle = '#4F4F4F';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
-  const urlY = buttonY + buttonHeight + 12;
-  ctx.fillText(urlText, targetWidth / 2, urlY);
+  ctx.fillText(website, targetWidth / 2, buttonY + buttonHeight + 12);
 
   return canvas;
 };
 
 // === Hilfsfunktionen ===
-
 function wrapText(ctx, text, maxWidth, maxLines) {
   const words = text.split(' ');
   let lines = [];
