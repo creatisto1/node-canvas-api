@@ -1,29 +1,33 @@
 const { createCanvas } = require('canvas');
 
-module.exports = async function generateTemplate_03_CTA(quadCanvas, overlayText, website) {
-  const targetWidth = 1000;
-  const targetHeight = 1500;
+module.exports = async function generateTemplate_03_CTA(img, overlayText, targetWidth, targetHeight, website) {
   const canvas = createCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext('2d');
-
-  overlayText = overlayText ? String(overlayText).trim() : '';
-  website = website ? String(website).trim() : 'www.creatisto.com';
 
   // === Hintergrundfarbe ===
   ctx.fillStyle = '#FDF8F6';
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
-  // === Quadrat-Bild oben einfügen (fertig, 1000x1000) ===
-  ctx.drawImage(quadCanvas, 0, 0, targetWidth, 1000);
+  // === Bild (oben) ===
+  const topImageHeight = targetHeight * 0.6;
+  const scale = Math.max(targetWidth / img.width, topImageHeight / img.height);
+  const sWidth = targetWidth / scale;
+  const sHeight = topImageHeight / scale;
+  const sx = (img.width - sWidth) / 2;
+  const sy = (img.height - sHeight) / 2;
+
+  ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, targetWidth, topImageHeight);
 
   // === Textblock-Parameter ===
+  const padding = 40;
   const maxTextWidth = targetWidth * 0.8;
-  const maxTextBlockHeight = 200;
+  const maxTextBlockHeight = targetHeight * 0.2;
   const maxLines = 3;
 
   let chosenFontSize = 16;
   let lines = [];
   let lineHeight = 0;
+  let urlFontSize = 14;
 
   for (let size = 96; size >= 16; size -= 2) {
     ctx.font = `bold ${size}px "Averta"`;
@@ -32,12 +36,14 @@ module.exports = async function generateTemplate_03_CTA(quadCanvas, overlayText,
     const testLines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
     const totalTextHeight = testLines.length * lineHeight;
 
+    // ✅ Kein Entfernen von echten Bindestrichen!
     const joined = testLines.join('').replace(/\s/g, '');
     const original = overlayText.replace(/\s/g, '');
 
     if (testLines.length <= maxLines && totalTextHeight <= maxTextBlockHeight && joined === original) {
       chosenFontSize = size;
       lines = testLines;
+      urlFontSize = Math.floor(size * 0.5);
       break;
     }
   }
@@ -46,16 +52,17 @@ module.exports = async function generateTemplate_03_CTA(quadCanvas, overlayText,
     ctx.font = `bold 16px "Averta"`;
     lineHeight = 16 * 1.3;
     lines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
+    urlFontSize = 10;
   }
 
-  // === Overlay Text (unterhalb vom Bild) ===
+  // === Overlay Text ===
   ctx.fillStyle = '#4F4F4F';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
   ctx.font = `bold ${chosenFontSize}px "Averta"`;
 
   const totalTextHeight = lines.length * lineHeight;
-  const startY = 1000 + 40;
+  const startY = topImageHeight + 40;
 
   lines.forEach((line, index) => {
     ctx.fillText(line, targetWidth / 2, startY + index * lineHeight);
@@ -83,7 +90,7 @@ module.exports = async function generateTemplate_03_CTA(quadCanvas, overlayText,
   ctx.fillText(buttonText, targetWidth / 2, buttonY + buttonHeight / 2);
 
   // === URL unter dem Button ===
-  const urlText = website ? String(website).trim() : "www.creatisto.com";
+  const urlText = website || www.creatisto.com;
   ctx.font = 'bold 43px "Averta"';
   ctx.fillStyle = '#4F4F4F';
   ctx.textAlign = 'center';
@@ -96,6 +103,7 @@ module.exports = async function generateTemplate_03_CTA(quadCanvas, overlayText,
 };
 
 // === Hilfsfunktionen ===
+
 function wrapText(ctx, text, maxWidth, maxLines) {
   const words = text.split(' ');
   let lines = [];
@@ -110,7 +118,9 @@ function wrapText(ctx, text, maxWidth, maxLines) {
     } else {
       if (ctx.measureText(word).width > maxWidth) {
         const brokenParts = breakLongWord(ctx, word, maxWidth);
-        if (currentLine) lines.push(currentLine);
+        if (currentLine) {
+          lines.push(currentLine);
+        }
         for (let part of brokenParts) {
           if (lines.length >= maxLines) return lines;
           lines.push(part);
@@ -120,6 +130,7 @@ function wrapText(ctx, text, maxWidth, maxLines) {
         lines.push(currentLine);
         currentLine = word;
       }
+
       if (lines.length >= maxLines) return lines;
     }
   }
@@ -131,15 +142,19 @@ function wrapText(ctx, text, maxWidth, maxLines) {
 function breakLongWord(ctx, word, maxWidth) {
   const parts = [];
   let current = '';
+
   for (let char of word) {
     const test = current + char;
     if (ctx.measureText(test).width > maxWidth) {
-      if (current) parts.push(current + '-');
+      if (current) {
+        parts.push(current + '-');
+      }
       current = char;
     } else {
       current += char;
     }
   }
+
   if (current) parts.push(current);
   return parts;
 }
