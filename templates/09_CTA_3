@@ -9,26 +9,26 @@ module.exports = function generateTemplate_DIYPin(quadCanvas, overlayText, websi
   overlayText = overlayText ? String(overlayText).trim() : '';
   website = website ? String(website).trim() : 'www.creatisto.com';
 
-  const barHeight = 100; // Höhe des Balkens oben
-  const beigeColor = '#F5F0E6'; // helles Beige
+  const barHeight = 100;
+  const beigeColor = '#F5F0E6';
 
-  // === Hintergrundfarbe ===
+  // Hintergrund
   ctx.fillStyle = '#FDF8F6';
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
-  // === Durchgehender Balken oben ===
+  // Balken oben
   ctx.fillStyle = beigeColor;
   ctx.fillRect(0, 0, targetWidth, barHeight);
 
-  // === URL-Text im Balken ===
-  const urlFontSize = 50; // größere Schrift
+  // URL
+  const urlFontSize = 50;
   ctx.font = `bold ${urlFontSize}px "Arial", sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#333333'; // dunkle Schrift für Kontrast
+  ctx.fillStyle = '#333333';
   ctx.fillText(website, targetWidth / 2, barHeight / 2);
 
-  // === Quadrat-Bild oben einfügen (1000x1000), direkt unter Balken ===
+  // Quadratbild
   if (quadCanvas) {
     try {
       ctx.drawImage(quadCanvas, 0, barHeight, targetWidth, 1000);
@@ -37,98 +37,111 @@ module.exports = function generateTemplate_DIYPin(quadCanvas, overlayText, websi
     }
   }
 
-  // === Untere farbige Fläche (Beige) ===
-  const lowerY = barHeight + 1000; // direkt unter dem Bild
+  // unterer Bereich
+  const lowerY = barHeight + 1000;
   const lowerHeight = targetHeight - lowerY;
   ctx.fillStyle = beigeColor;
   ctx.fillRect(0, lowerY, targetWidth, lowerHeight);
 
-  // === Overlay Text + Button ===
+  // === Text + Button Einstellungen ===
   const maxTextWidth = targetWidth * 0.8;
-  const maxTextBlockHeight = 200;
+  const maxTextBlockHeight = 200; // Platz für Textblock (inkl. Abstand zum Button)
   const maxLines = 3;
 
-  // Schriftgrößenbereich
   const maxFont = 96;
-  const minFont = 12; // kannst du anpassen
-  let chosenFontSize = minFont;
-  let lines = [];
-  let lineHeight = 0;
+  const minFont = 12;
+  const lineMultiplier = 1.2;
 
   if (overlayText) {
-    // Versuche von groß nach klein eine passende Schriftgröße zu finden
-    for (let size = maxFont; size >= minFont; size -= 1) {
-      ctx.font = `bold ${size}px "Arial", sans-serif`;
-      lineHeight = Math.ceil(size * 1.2); // Zeilenhöhe (1.2)
-      const testLines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
-      const totalTextHeight = testLines.length * lineHeight;
+    // Versuche von groß nach klein eine passende Schriftgröße zu finden.
+    let chosenFont = null;
+    let chosenLines = null;
+    let chosenLineHeight = null;
 
-      if (testLines.length <= maxLines && totalTextHeight <= maxTextBlockHeight) {
-        chosenFontSize = size;
-        lines = testLines;
+    for (let size = maxFont; size >= minFont; size--) {
+      ctx.font = `bold ${size}px "Arial", sans-serif`;
+      const lineHeight = Math.ceil(size * lineMultiplier);
+      const lines = wrapTextFull(ctx, overlayText, maxTextWidth);
+      const totalHeight = lines.length * lineHeight;
+
+      if (lines.length <= maxLines && totalHeight <= maxTextBlockHeight) {
+        chosenFont = size;
+        chosenLines = lines;
+        chosenLineHeight = lineHeight;
         break;
       }
     }
 
-    // Falls keine Größe gefunden wurde (selbst minFont passt nicht), dann:
-    if (lines.length === 0) {
-      chosenFontSize = minFont;
-      ctx.font = `bold ${chosenFontSize}px "Arial", sans-serif`;
-      lineHeight = Math.ceil(chosenFontSize * 1.2);
-      lines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
+    // Wenn nichts gefunden: fallback auf minFont und ellipsize ggf. die letzte Zeile
+    if (!chosenFont) {
+      chosenFont = minFont;
+      ctx.font = `bold ${chosenFont}px "Arial", sans-serif`;
+      chosenLineHeight = Math.ceil(chosenFont * lineMultiplier);
+      let lines = wrapTextFull(ctx, overlayText, maxTextWidth);
 
-      // Wenn noch mehr als maxLines vorhanden sind, ellipsize die letzte Zeile.
+      // Falls mehr Lines als erlaubt -> beschneide auf maxLines
       if (lines.length > maxLines) {
         lines = lines.slice(0, maxLines);
       }
-      // Sorge dafür, dass letzte Zeile ggf. gekürzt wird, falls sie noch zu breit ist.
+
+      // Stelle sicher, dass die letzte Zeile in die Breite passt (ansonsten ellipsize)
       if (lines.length > 0) {
         lines[lines.length - 1] = ellipsizeLine(ctx, lines[lines.length - 1], maxTextWidth);
       }
+
+      chosenLines = lines;
     }
 
-    // === Overlay Text zeichnen ===
+    // Zeichnen
     ctx.fillStyle = '#333333';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    ctx.font = `bold ${chosenFontSize}px "Arial", sans-serif`;
+    ctx.font = `bold ${chosenFont}px "Arial", sans-serif`;
 
-    const totalTextHeight = lines.length * lineHeight;
+    const totalTextHeight = chosenLines.length * chosenLineHeight;
     const paddingTop = 20;
     const startY = lowerY + paddingTop;
 
-    // Wenn der Text block (inkl. Button) zu groß für den unteren Bereich ist, 
-    // verkleinere ggf. chosenFontSize noch weiter (fallback) — aber in der Regel schon erledigt.
-    const buttonGap = 30;
-    const estimatedButtonHeight = Math.max(36, Math.floor(targetHeight * 0.035)); // grobe Schätzung
-    const neededHeight = totalTextHeight + buttonGap + estimatedButtonHeight + paddingTop;
-    if (neededHeight > lowerHeight) {
-      // Berechne um wieviel wir noch schrumpfen müssen (iterativ)
-      for (let size = chosenFontSize - 1; size >= minFont; size--) {
+    // Falls gesamter Block (Text + Button) trotzdem zu groß für lowerHeight -> versuche nochmal zu schrumpfen
+    const estimatedButtonHeight = Math.max(36, Math.floor(targetHeight * 0.035));
+    const buttonGap = 20;
+    if (totalTextHeight + buttonGap + estimatedButtonHeight + paddingTop > lowerHeight) {
+      // iterativ weiter verkleinern bis es passt oder minFont erreicht ist
+      let fits = false;
+      for (let size = chosenFont - 1; size >= minFont; size--) {
         ctx.font = `bold ${size}px "Arial", sans-serif`;
-        lineHeight = Math.ceil(size * 1.2);
-        const testLines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
-        const testTotal = testLines.length * lineHeight + buttonGap + estimatedButtonHeight + paddingTop;
-        if (testLines.length <= maxLines && testTotal <= lowerHeight) {
-          chosenFontSize = size;
-          lines = testLines;
+        const lineHeight = Math.ceil(size * lineMultiplier);
+        let lines = wrapTextFull(ctx, overlayText, maxTextWidth);
+        if (lines.length > maxLines) lines = lines.slice(0, maxLines);
+        const tot = lines.length * lineHeight + buttonGap + estimatedButtonHeight + paddingTop;
+        if (tot <= lowerHeight) {
+          chosenFont = size;
+          chosenLines = lines;
+          chosenLineHeight = lineHeight;
+          fits = true;
           break;
         }
       }
-      // Wenn nach diesem Schritt immer noch overflow, ellipsize letzte Zeile:
-      if (lines.length > maxLines) lines = lines.slice(0, maxLines);
-      if (lines.length > 0) lines[lines.length - 1] = ellipsizeLine(ctx, lines[lines.length - 1], maxTextWidth);
-      ctx.font = `bold ${chosenFontSize}px "Arial", sans-serif`;
-      lineHeight = Math.ceil(chosenFontSize * 1.2);
+      // falls nach dieser Schleife nichts passt: ellipsize letzte Zeile (bei minFont)
+      if (!fits) {
+        ctx.font = `bold ${minFont}px "Arial", sans-serif`;
+        chosenFont = minFont;
+        chosenLineHeight = Math.ceil(minFont * lineMultiplier);
+        let lines = wrapTextFull(ctx, overlayText, maxTextWidth).slice(0, maxLines);
+        if (lines.length > 0) lines[lines.length - 1] = ellipsizeLine(ctx, lines[lines.length - 1], maxTextWidth);
+        chosenLines = lines;
+      }
+      // setze Font wieder
+      ctx.font = `bold ${chosenFont}px "Arial", sans-serif`;
     }
 
-    // Zeichnen der Textzeilen
-    for (let i = 0; i < lines.length; i++) {
-      ctx.fillText(lines[i], targetWidth / 2, startY + i * lineHeight);
+    // Endgültig zeichnen
+    for (let i = 0; i < chosenLines.length; i++) {
+      ctx.fillText(chosenLines[i], targetWidth / 2, startY + i * chosenLineHeight);
     }
 
-    // === Button "JETZT ENTDECKEN" ===
-    const scale = 0.92; // 8% kleiner
+    // Button-Berechnung
+    const scale = 0.92;
     const buttonText = 'JETZT ENTDECKEN';
     let buttonFontSize = Math.max(14, Math.floor(targetHeight * 0.035 * 1.1));
     buttonFontSize = Math.floor(buttonFontSize * scale);
@@ -141,33 +154,32 @@ module.exports = function generateTemplate_DIYPin(quadCanvas, overlayText, websi
     const buttonWidth = textWidth + buttonPaddingX * 2;
     const buttonHeight = buttonFontSize + buttonPaddingY * 2;
 
-    // Button-Position: unterhalb des Textblocks, mit Abstand
     const buttonX = targetWidth / 2 - buttonWidth / 2;
-    const buttonY = startY + lines.length * lineHeight + 20;
+    let buttonY = startY + chosenLines.length * chosenLineHeight + 20;
 
-    // Falls Button über das untere Ende hinausragt, verschiebe ihn nach oben so viel wie möglich
-    let finalButtonY = buttonY;
+    // Falls der Button über das Canvas hinaus geht -> nach oben schieben (so viel wie nötig)
     const bottomPadding = 12;
-    if (finalButtonY + buttonHeight + bottomPadding > targetHeight) {
-      finalButtonY = targetHeight - bottomPadding - buttonHeight;
+    if (buttonY + buttonHeight + bottomPadding > targetHeight) {
+      buttonY = targetHeight - bottomPadding - buttonHeight;
     }
 
-    roundRect(ctx, buttonX, finalButtonY, buttonWidth, buttonHeight, 8);
+    roundRect(ctx, buttonX, buttonY, buttonWidth, buttonHeight, 8);
     ctx.fillStyle = '#C0A880';
     ctx.fill();
 
     ctx.fillStyle = '#FFFFFF';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(buttonText, targetWidth / 2, finalButtonY + buttonHeight / 2);
+    ctx.fillText(buttonText, targetWidth / 2, buttonY + buttonHeight / 2);
   }
 
   return canvas;
 };
 
-// ===== Hilfsfunktionen =====
-function wrapText(ctx, text, maxWidth, maxLines) {
-  // Wrappt Text basierend auf aktueller ctx.font, bricht Wortgruppen wenn nötig (mit Bindestrich).
+// Hilfsfunktionen
+
+// Wrappt Text in beliebig viele Zeilen basierend auf aktueller ctx.font und maxWidth (kein MaxLines cut)
+function wrapTextFull(ctx, text, maxWidth) {
   const words = String(text).split(/\s+/);
   const lines = [];
   let current = '';
@@ -183,43 +195,36 @@ function wrapText(ctx, text, maxWidth, maxLines) {
     if (current) {
       lines.push(current);
       current = '';
-      if (lines.length >= maxLines) break;
     }
 
-    // falls ein einzelnes Wort breiter als maxWidth ist -> weise Teilstücke zu (Hyphenation)
+    // falls ein einzelnes Wort breiter als maxWidth -> splitten mit Bindestrich
     if (ctx.measureText(word).width > maxWidth) {
       let part = '';
       for (let i = 0; i < word.length; i++) {
         part += word[i];
-        // Falls das Part zu breit wird, push vorheriges part (ohne letztes Zeichen)
-        if (ctx.measureText(part + (i < word.length - 1 ? '-' : '')).width > maxWidth) {
+        const candidate = part + (i < word.length - 1 ? '-' : '');
+        if (ctx.measureText(candidate).width > maxWidth) {
           const pushPart = part.slice(0, -1);
-          if (pushPart) {
-            lines.push(pushPart + '-');
-            if (lines.length >= maxLines) break;
-          }
+          if (pushPart) lines.push(pushPart + '-');
           part = word[i];
         }
       }
-      if (lines.length >= maxLines) break;
-      // Das verbleibende 'part' soll als aktuelles beginnen (falls noch platz für weitere Wortreste)
       if (part) current = part;
     } else {
-      if (lines.length < maxLines) current = word;
+      current = word;
     }
   }
 
-  if (current && lines.length < maxLines) lines.push(current);
-  return lines.slice(0, maxLines);
+  if (current) lines.push(current);
+  return lines;
 }
 
+// Ellipsize: verkürzt eine Zeile so dass sie in maxWidth passt und hängt '…' an.
 function ellipsizeLine(ctx, line, maxWidth) {
-  // Falls die Zeile zu breit ist, schneidet diese Funktion Zeichen ab und hängt '…' an.
   if (ctx.measureText(line).width <= maxWidth) return line;
   const ell = '…';
   let low = 0;
   let high = line.length;
-  // Binary search für die richtige Länge
   while (low < high) {
     const mid = Math.floor((low + high) / 2);
     const test = line.slice(0, mid) + ell;
