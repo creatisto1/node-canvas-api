@@ -20,6 +20,7 @@ const cta_2_inverted = require('./templates/07_CTA_2_inverted');
 const cta_2_St = require('./templates/08_CTA_2_St');
 const cta_3 = require('./templates/09_CTA_3');
 const quadratZoom = require('./templatesCrop/07_quadratZoom');
+const quadratV = require('./templatesCrop/08_quadratV');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -623,6 +624,38 @@ app.post('/quadratZoom', async (req, res) => {
     const canvas = await quadratZoom(img);  // nur img übergeben
 
     const filename = `img-quadratZoom-${Date.now()}.png`;
+    const savePath = path.join(publicDir, filename);
+    const out = fs.createWriteStream(savePath);
+    const stream = canvas.createPNGStream();
+
+    stream.pipe(out);
+    out.on('finish', () => {
+      const imgUrl = `${req.protocol}://${req.get('host')}/public/${filename}`;
+      res.json({ imgUrl });
+    });
+
+  } catch (error) {
+    console.error('Fehler:', error);
+    res.status(500).send('Fehler beim Verarbeiten des Bildes');
+  }
+});
+
+// Neue Route: quadratV Template
+app.post('/quadratV', async (req, res) => {
+  const imageUrl = req.body.url;
+  const website = req.body.website || null; // aktuell ungenutzt, aber belassen falls später gebraucht
+
+  console.log('Empfangene Website:', website);
+
+  if (!imageUrl) {
+    return res.status(400).send('Missing "url" in request body');
+  }
+
+  try {
+    const img = await loadImage(imageUrl);
+    const canvas = await quadratV(img);  // nur img übergeben
+
+    const filename = `img-quadratV-${Date.now()}.png`;
     const savePath = path.join(publicDir, filename);
     const out = fs.createWriteStream(savePath);
     const stream = canvas.createPNGStream();
