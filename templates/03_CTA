@@ -1,37 +1,37 @@
 const { createCanvas } = require('canvas');
 
-module.exports = async function generateTemplate_03_CTA(img, overlayText, targetWidth, targetHeight, website) {
+module.exports = async function generateTemplate_03_CTA(img, overlayText, website) {
+  const targetWidth = 1000;
+  const targetHeight = 1500;
   const canvas = createCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext('2d');
+
+  overlayText = overlayText ? String(overlayText).trim() : '';
+  website = website ? String(website).trim() : 'www.creatisto.com';
 
   // === Hintergrundfarbe ===
   ctx.fillStyle = '#FDF8F6';
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
-  // === Bild (oben) proportional skalieren ===
-  const topImageHeight = targetHeight * 0.6;
+  // === Bild proportional skalieren (oben) ===
+  const topImageHeight = 1000; // genau wie beim DIYPin-Template
+  let drawWidth = targetWidth;
+  let drawHeight = topImageHeight;
+  let dx = 0;
+  let dy = 0;
+
+  // Quadratische Bilder oder andere
   const imgRatio = img.width / img.height;
-
-  let drawWidth, drawHeight;
-  let dx, dy;
-
-  // Quadratische Bilder
-  if (img.width === img.height) {
-    drawWidth = targetWidth;
-    drawHeight = Math.min(drawWidth, topImageHeight);
-    dx = 0;
-    dy = 0;
-  } else {
-    // andere Formate
+  if (img.width !== img.height) {
     if (imgRatio > targetWidth / topImageHeight) {
       drawWidth = targetWidth;
       drawHeight = targetWidth / imgRatio;
+      dy = 0;
     } else {
       drawHeight = topImageHeight;
       drawWidth = imgRatio * topImageHeight;
+      dx = (targetWidth - drawWidth) / 2;
     }
-    dx = (targetWidth - drawWidth) / 2;
-    dy = 0;
   }
 
   ctx.drawImage(img, dx, dy, drawWidth, drawHeight);
@@ -39,7 +39,7 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, target
   // === Textblock-Parameter ===
   const padding = 40;
   const maxTextWidth = targetWidth * 0.8;
-  const maxTextBlockHeight = targetHeight * 0.2;
+  const maxTextBlockHeight = targetHeight - topImageHeight - 200; // Platz für Text + Button
   const maxLines = 3;
 
   let chosenFontSize = 16;
@@ -49,7 +49,6 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, target
   for (let size = 96; size >= 16; size -= 2) {
     ctx.font = `bold ${size}px "Averta"`;
     lineHeight = size * 1.3;
-
     const testLines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
     const totalTextHeight = testLines.length * lineHeight;
 
@@ -76,7 +75,7 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, target
   ctx.font = `bold ${chosenFontSize}px "Averta"`;
 
   const totalTextHeight = lines.length * lineHeight;
-  const startY = drawHeight + padding;
+  const startY = topImageHeight + padding;
 
   lines.forEach((line, index) => {
     ctx.fillText(line, targetWidth / 2, startY + index * lineHeight);
@@ -104,14 +103,13 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, target
   ctx.fillText(buttonText, targetWidth / 2, buttonY + buttonHeight / 2);
 
   // === URL unter dem Button ===
-  const urlText = website || 'www.creatisto.com';
   ctx.font = 'bold 43px "Averta"';
   ctx.fillStyle = '#4F4F4F';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
 
   const urlY = buttonY + buttonHeight + 12;
-  ctx.fillText(urlText, targetWidth / 2, urlY);
+  ctx.fillText(website, targetWidth / 2, urlY);
 
   return canvas;
 };
