@@ -39,7 +39,7 @@ module.exports = async function resizeToSquare(img) {
     targetSize / 2, targetSize / 2, targetSize * 0.7  // äußerer Kreis
   );
   vignette.addColorStop(0, 'rgba(0, 0, 0, 0)');       // Mitte transparent
-  vignette.addColorStop(1, 'rgba(0, 0, 0, 0.35)');    // Ränder leicht dunkel (0.35 ≈ 35% Deckkraft)
+  vignette.addColorStop(1, 'rgba(0, 0, 0, 0.4)');    // Ränder leicht dunkel (0.35 ≈ 35% Deckkraft)
 
   ctx.fillStyle = vignette;
   ctx.fillRect(0, 0, targetSize, targetSize);
