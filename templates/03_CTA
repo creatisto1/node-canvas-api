@@ -1,6 +1,8 @@
 const { createCanvas } = require('canvas');
 
-module.exports = async function generateTemplate_03_CTA(img, overlayText, targetWidth = 1000, targetHeight = 1500, website) {
+module.exports = async function generateTemplate_03_CTA(img, overlayText, website) {
+  const targetWidth = 1000;
+  const targetHeight = 1500;
   const canvas = createCanvas(targetWidth, targetHeight);
   const ctx = canvas.getContext('2d');
 
@@ -11,187 +13,153 @@ module.exports = async function generateTemplate_03_CTA(img, overlayText, target
   ctx.fillStyle = '#FDF8F6';
   ctx.fillRect(0, 0, targetWidth, targetHeight);
 
-  // === Bild oben (Quadrat) ===
-  const barHeight = 0; // optional: wenn du oben einen Balken willst
-  const quadSize = Math.min(img.width, img.height); // Quadrat zuschneiden
-  const sx = (img.width - quadSize) / 2;
-  const sy = (img.height - quadSize) / 2;
-  const quadCanvasSize = targetWidth; // 1000 px Breite
-  const quadHeight = targetHeight * 0.6; // 60% Höhe
-  try {
-    ctx.drawImage(img, sx, sy, quadSize, quadSize, 0, barHeight, quadCanvasSize, quadHeight);
-  } catch (e) {
-    console.warn('Bild konnte nicht gezeichnet werden:', e.message);
+  // === Bild proportional skalieren (oben) ===
+  const maxImageHeight = targetHeight * 0.6; // 60% für Bild
+  const imgRatio = img.width / img.height;
+  let drawWidth, drawHeight;
+
+  if (imgRatio > targetWidth / maxImageHeight) {
+    // Bild breiter → Breite = targetWidth
+    drawWidth = targetWidth;
+    drawHeight = targetWidth / imgRatio;
+  } else {
+    // Bild höher → Höhe = maxImageHeight
+    drawHeight = maxImageHeight;
+    drawWidth = imgRatio * maxImageHeight;
   }
 
-  // === Unterer Bereich für Text + Button ===
-  const lowerY = barHeight + quadHeight;
-  const lowerHeight = targetHeight - lowerY;
+  const dx = (targetWidth - drawWidth) / 2;
+  const dy = 0; // oben ansetzen
+  ctx.drawImage(img, dx, dy, drawWidth, drawHeight);
 
+  // === Textblock-Parameter ===
+  const padding = 40;
   const maxTextWidth = targetWidth * 0.8;
-  const maxTextBlockHeight = lowerHeight * 0.4; // ca. 40% für Text
+  const maxTextBlockHeight = targetHeight - drawHeight - 200; // Platz für Text + Button
   const maxLines = 3;
 
-  const maxFont = 96;
-  const minFont = 16;
-  const lineMultiplier = 1.25;
+  let chosenFontSize = 16;
+  let lines = [];
+  let lineHeight = 0;
 
-  let chosenFont = null;
-  let chosenLines = null;
-  let chosenLineHeight = null;
+  for (let size = 96; size >= 16; size -= 2) {
+    ctx.font = `bold ${size}px "Averta"`;
+    lineHeight = size * 1.3;
+    const testLines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
+    const totalTextHeight = testLines.length * lineHeight;
 
-  if (overlayText) {
-    // Schriftgröße anpassen, damit Text in maxLines passt
-    for (let size = maxFont; size >= minFont; size--) {
-      ctx.font = `bold ${size}px "Arial", sans-serif`;
-      const lineHeight = Math.ceil(size * lineMultiplier);
-      let lines = wrapTextFull(ctx, overlayText, maxTextWidth);
+    const joined = testLines.join('').replace(/\s/g, '');
+    const original = overlayText.replace(/\s/g, '');
 
-      if (lines.length > maxLines) lines = lines.slice(0, maxLines);
-      const totalHeight = lines.length * lineHeight;
-
-      if (totalHeight <= maxTextBlockHeight) {
-        chosenFont = size;
-        chosenLines = lines;
-        chosenLineHeight = lineHeight;
-        break;
-      }
+    if (testLines.length <= maxLines && totalTextHeight <= maxTextBlockHeight && joined === original) {
+      chosenFontSize = size;
+      lines = testLines;
+      break;
     }
-
-    // Fallback, falls keine passende Schrift gefunden
-    if (!chosenFont) {
-      chosenFont = minFont;
-      ctx.font = `bold ${chosenFont}px "Arial", sans-serif`;
-      chosenLineHeight = Math.ceil(minFont * lineMultiplier);
-      let lines = wrapTextFull(ctx, overlayText, maxTextWidth).slice(0, maxLines);
-      // letzte Zeile ellipsize
-      if (lines.length > 0) {
-        lines[lines.length - 1] = ellipsizeLine(ctx, lines[lines.length - 1], maxTextWidth);
-      }
-      chosenLines = lines;
-    }
-
-    // Text zeichnen
-    ctx.fillStyle = '#4F4F4F';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    ctx.font = `bold ${chosenFont}px "Arial", sans-serif`;
-
-    const totalTextHeight = chosenLines.length * chosenLineHeight;
-    const paddingTop = 20;
-    const startY = lowerY + paddingTop;
-
-    chosenLines.forEach((line, i) => {
-      ctx.fillText(line, targetWidth / 2, startY + i * chosenLineHeight);
-    });
-
-    // === Button ===
-    const buttonText = 'JETZT ENTDECKEN';
-    const buttonScale = 0.92;
-    let buttonFontSize = Math.max(14, Math.floor(targetHeight * 0.035 * 1.1));
-    buttonFontSize = Math.floor(buttonFontSize * buttonScale);
-
-    const buttonPaddingX = 40 * buttonScale;
-    const buttonPaddingY = 14 * buttonScale;
-
-    ctx.font = `bold ${buttonFontSize}px "Arial", sans-serif`;
-    const textWidth = ctx.measureText(buttonText).width;
-    const buttonWidth = textWidth + buttonPaddingX * 2;
-    const buttonHeight = buttonFontSize + buttonPaddingY * 2;
-
-    let buttonX = targetWidth / 2 - buttonWidth / 2;
-    let buttonY = startY + totalTextHeight + 20;
-
-    // Button darf nicht über das Canvas hinausgehen
-    const bottomPadding = 12;
-    if (buttonY + buttonHeight + bottomPadding > targetHeight) {
-      buttonY = targetHeight - bottomPadding - buttonHeight;
-    }
-
-    roundRect(ctx, buttonX, buttonY, buttonWidth, buttonHeight, 8);
-    ctx.fillStyle = '#C0A880';
-    ctx.fill();
-
-    ctx.fillStyle = '#FFFFFF';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(buttonText, targetWidth / 2, buttonY + buttonHeight / 2);
-
-    // === URL unter Button ===
-    const urlText = website || 'www.creatisto.com';
-    ctx.font = 'bold 43px "Arial", sans-serif';
-    ctx.fillStyle = '#4F4F4F';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    const urlY = buttonY + buttonHeight + 12;
-    ctx.fillText(urlText, targetWidth / 2, urlY);
   }
+
+  if (lines.length === 0) {
+    ctx.font = `bold 16px "Averta"`;
+    lineHeight = 16 * 1.3;
+    lines = wrapText(ctx, overlayText, maxTextWidth, maxLines);
+  }
+
+  // === Overlay Text ===
+  ctx.fillStyle = '#4F4F4F';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.font = `bold ${chosenFontSize}px "Averta"`;
+
+  const totalTextHeight = lines.length * lineHeight;
+  const startY = drawHeight + padding;
+
+  lines.forEach((line, index) => {
+    ctx.fillText(line, targetWidth / 2, startY + index * lineHeight);
+  });
+
+  // === Button ===
+  const buttonText = 'MEHR ERFAHREN';
+  const buttonFontSize = Math.floor(targetHeight * 0.035);
+  const buttonPaddingX = 40;
+  const buttonPaddingY = 20;
+
+  ctx.font = `bold ${buttonFontSize}px "Averta"`;
+  const textWidth = ctx.measureText(buttonText).width;
+  const buttonWidth = textWidth + buttonPaddingX * 2;
+  const buttonHeight = buttonFontSize + buttonPaddingY * 2;
+  const buttonX = targetWidth / 2 - buttonWidth / 2;
+  const buttonY = startY + totalTextHeight + 40;
+
+  ctx.fillStyle = '#4AC2C2';
+  ctx.fillRect(buttonX, buttonY, buttonWidth, buttonHeight);
+
+  ctx.fillStyle = '#FFFFFF';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(buttonText, targetWidth / 2, buttonY + buttonHeight / 2);
+
+  // === URL unter dem Button ===
+  const urlText = website || 'www.creatisto.com';
+  ctx.font = 'bold 43px "Averta"';
+  ctx.fillStyle = '#4F4F4F';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+
+  const urlY = buttonY + buttonHeight + 12;
+  ctx.fillText(urlText, targetWidth / 2, urlY);
 
   return canvas;
 };
 
 // === Hilfsfunktionen ===
 
-function wrapTextFull(ctx, text, maxWidth) {
-  const words = String(text).split(/\s+/);
-  const lines = [];
-  let current = '';
+function wrapText(ctx, text, maxWidth, maxLines) {
+  const words = text.split(' ');
+  let lines = [];
+  let currentLine = '';
 
-  for (let w = 0; w < words.length; w++) {
-    const word = words[w];
-    const test = current ? `${current} ${word}` : word;
-    if (ctx.measureText(test).width <= maxWidth) {
-      current = test;
-      continue;
-    }
-    if (current) {
-      lines.push(current);
-      current = '';
-    }
+  for (let word of words) {
+    const testLine = currentLine ? `${currentLine} ${word}` : word;
+    const testWidth = ctx.measureText(testLine).width;
 
-    if (ctx.measureText(word).width > maxWidth) {
-      let part = '';
-      for (let i = 0; i < word.length; i++) {
-        part += word[i];
-        const candidate = part + (i < word.length - 1 ? '-' : '');
-        if (ctx.measureText(candidate).width > maxWidth) {
-          if (part.length > 1) lines.push(part.slice(0, -1) + '-');
-          part = word[i];
-        }
-      }
-      if (part) current = part;
+    if (testWidth <= maxWidth) {
+      currentLine = testLine;
     } else {
-      current = word;
+      if (ctx.measureText(word).width > maxWidth) {
+        const brokenParts = breakLongWord(ctx, word, maxWidth);
+        if (currentLine) lines.push(currentLine);
+        for (let part of brokenParts) {
+          if (lines.length >= maxLines) return lines;
+          lines.push(part);
+        }
+        currentLine = '';
+      } else {
+        lines.push(currentLine);
+        currentLine = word;
+      }
+
+      if (lines.length >= maxLines) return lines;
     }
   }
 
-  if (current) lines.push(current);
+  if (currentLine && lines.length < maxLines) lines.push(currentLine);
   return lines;
 }
 
-function ellipsizeLine(ctx, line, maxWidth) {
-  if (ctx.measureText(line).width <= maxWidth) return line;
-  const ell = '…';
-  let low = 0;
-  let high = line.length;
-  while (low < high) {
-    const mid = Math.floor((low + high) / 2);
-    const test = line.slice(0, mid) + ell;
-    if (ctx.measureText(test).width <= maxWidth) {
-      low = mid + 1;
+function breakLongWord(ctx, word, maxWidth) {
+  const parts = [];
+  let current = '';
+
+  for (let char of word) {
+    const test = current + char;
+    if (ctx.measureText(test).width > maxWidth) {
+      if (current) parts.push(current + '-');
+      current = char;
     } else {
-      high = mid;
+      current += char;
     }
   }
-  return line.slice(0, Math.max(0, low - 1)) + ell;
-}
 
-function roundRect(ctx, x, y, width, height, radius) {
-  ctx.beginPath();
-  ctx.moveTo(x + radius, y);
-  ctx.arcTo(x + width, y, x + width, y + height, radius);
-  ctx.arcTo(x + width, y + height, x, y + height, radius);
-  ctx.arcTo(x, y + height, x, y, radius);
-  ctx.arcTo(x, y, x + width, y, radius);
-  ctx.closePath();
+  if (current) parts.push(current);
+  return parts;
 }
